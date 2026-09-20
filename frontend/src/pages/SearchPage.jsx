@@ -12,7 +12,7 @@ export default function SearchPage() {
   const [results, setResults] = useState({ songs: [], artists: [], playlists: [] });
   const [loading, setLoading] = useState(false);
   const [selectedSongForPlaylist, setSelectedSongForPlaylist] = useState(null);
-  const { playSong } = usePlayer();
+  const { playSong, songs } = usePlayer();
 
   // Search logic with 250ms debounce
   useEffect(() => {
@@ -28,7 +28,7 @@ export default function SearchPage() {
       try {
         // Try live backend search endpoint
         const response = await api.get(`/search?q=${encodeURIComponent(q)}`);
-        if (response.data) {
+        if (response.data && response.data.songs && response.data.songs.length > 0) {
           setResults({
             songs: response.data.songs || [],
             artists: response.data.artists || [],
@@ -38,15 +38,15 @@ export default function SearchPage() {
           return;
         }
       } catch {
-        // Fallback to local catalog search
+        // Fallback to dynamic catalog search
       }
 
       // Filter catalog
-      const matchedSongs = SAMPLE_SONGS.filter(s => 
-        s.title.toLowerCase().includes(q) || 
-        s.artist.toLowerCase().includes(q) || 
-        s.genre.toLowerCase().includes(q) ||
-        s.album.toLowerCase().includes(q)
+      const matchedSongs = (songs || SAMPLE_SONGS).filter(s => 
+        (s.title || '').toLowerCase().includes(q) || 
+        (s.artist || s.artistName || '').toLowerCase().includes(q) || 
+        (s.genre || '').toLowerCase().includes(q) ||
+        (s.album || s.albumTitle || '').toLowerCase().includes(q)
       );
 
       const matchedArtists = SAMPLE_ARTISTS.filter(a => 

@@ -8,12 +8,12 @@ import AddToPlaylistModal from '../components/playlist/AddToPlaylistModal';
 import { useNavigate } from 'react-router-dom';
 
 export default function LikedSongsPage() {
-  const { likedSongIds, playSong, toggleShuffle } = usePlayer();
+  const { likedSongIds, playSong, toggleShuffle, songs } = usePlayer();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [selectedSongForPlaylist, setSelectedSongForPlaylist] = useState(null);
 
-  const likedSongs = SAMPLE_SONGS.filter(s => likedSongIds.includes(s.id));
+  const likedSongs = (songs || SAMPLE_SONGS).filter(s => (likedSongIds || []).includes(s.id));
 
   const handlePlayAll = () => {
     if (likedSongs.length > 0) {

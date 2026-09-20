@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { SAMPLE_SONGS } from '../utils/sampleData';
+import { fetchSongsFromSupabase } from '../services/supabaseStorage';
 import { useToast } from './ToastContext';
 import api from '../services/api';
 
@@ -10,8 +11,25 @@ export function PlayerProvider({ children }) {
   const audioRef = useRef(new Audio());
   const { addToast } = useToast();
 
+  // Custom uploaded songs stored locally
+  const [customSongs, setCustomSongs] = useState(() => {
+    try {
+      const saved = localStorage.getItem('musify_custom_songs');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // All combined songs (Supabase + custom uploads + default catalog)
+  const [songs, setSongs] = useState(() => {
+    const saved = localStorage.getItem('musify_custom_songs');
+    const custom = saved ? JSON.parse(saved) : [];
+    return [...custom, ...SAMPLE_SONGS];
+  });
+
   // Playback state
-  const [currentSong, setCurrentSong] = useState(SAMPLE_SONGS[0]);
+  const [currentSong, setCurrentSong] = useState(() => songs[0] || SAMPLE_SONGS[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(SAMPLE_SONGS[0]?.duration || 0);
@@ -24,7 +42,7 @@ export function PlayerProvider({ children }) {
   const [repeatMode, setRepeatMode] = useState('off'); // 'off' | 'all' | 'one'
 
   // Queue & Navigation
-  const [queue, setQueue] = useState(SAMPLE_SONGS);
+  const [queue, setQueue] = useState(songs);
   const [queueIndex, setQueueIndex] = useState(0);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [isLyricsOpen, setIsLyricsOpen] = useState(false);
@@ -38,6 +56,44 @@ export function PlayerProvider({ children }) {
     const saved = localStorage.getItem('musify_recent_songs');
     return saved ? JSON.parse(saved) : [SAMPLE_SONGS[0], SAMPLE_SONGS[1], SAMPLE_SONGS[3]];
   });
+
+  // Fetch live songs from Supabase PostgreSQL on mount
+  useEffect(() => {
+    async function loadSupabase() {
+      try {
+        const sbSongs = await fetchSongsFromSupabase();
+        if (sbSongs && sbSongs.length > 0) {
+          console.log(`Loaded ${sbSongs.length} songs from Supabase database`);
+          setSongs(prev => {
+            const existingIds = new Set(sbSongs.map(s => s.id));
+            const filteredCustom = customSongs.filter(s => !existingIds.has(s.id));
+            const filteredSample = SAMPLE_SONGS.filter(s => !existingIds.has(s.id));
+            return [...filteredCustom, ...sbSongs, ...filteredSample];
+          });
+        }
+      } catch (err) {
+        console.warn('Could not load songs from Supabase:', err);
+      }
+    }
+    loadSupabase();
+  }, [customSongs]);
+
+  // Method to add a newly uploaded song
+  const addUploadedSong = useCallback((newSong) => {
+    setCustomSongs(prev => {
+      const updated = [newSong, ...prev.filter(s => s.id !== newSong.id)];
+      localStorage.setItem('musify_custom_songs', JSON.stringify(updated));
+      return updated;
+    });
+
+    setSongs(prev => {
+      const filtered = prev.filter(s => s.id !== newSong.id);
+      return [newSong, ...filtered];
+    });
+
+    // Also place in queue so artist can preview immediately
+    setQueue(prev => [newSong, ...prev]);
+  }, []);
 
   // Keep volume updated on audio element
   useEffect(() => {
@@ -311,7 +367,6 @@ export function PlayerProvider({ children }) {
   // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Don't intercept when user is typing in inputs or textarea
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
 
       if (e.code === 'Space') {
@@ -339,6 +394,8 @@ export function PlayerProvider({ children }) {
   return (
     <PlayerContext.Provider
       value={{
+        songs,
+        addUploadedSong,
         currentSong,
         isPlaying,
         currentTime,

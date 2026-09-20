@@ -6,27 +6,27 @@ import CategorySection from '../components/cards/CategorySection';
 import AddToPlaylistModal from '../components/playlist/AddToPlaylistModal';
 
 export default function HomePage() {
-  const { playSong, recentlyPlayed } = usePlayer();
+  const { playSong, recentlyPlayed, songs } = usePlayer();
   const [selectedSongForPlaylist, setSelectedSongForPlaylist] = useState(null);
 
-  // Group songs by section
-  const trendingSongs = SAMPLE_SONGS.filter(s => s.playCount > 2000000);
-  const tamilHits = SAMPLE_SONGS.filter(s => s.genre === 'Tamil Hits');
-  const tamilTrending = SAMPLE_SONGS.filter(s => s.genre === 'Tamil Trending');
-  const tamilMelody = SAMPLE_SONGS.filter(s => s.genre === 'Tamil Melody');
-  const tamilLove = SAMPLE_SONGS.filter(s => s.genre === 'Tamil Love');
-  const tamilChill = SAMPLE_SONGS.filter(s => s.genre === 'Tamil Chill');
-  const tamilParty = SAMPLE_SONGS.filter(s => s.genre === 'Tamil Party');
-  const tamilIndie = SAMPLE_SONGS.filter(s => s.genre === 'Tamil Indie');
-  const tamilClassical = SAMPLE_SONGS.filter(s => s.genre === 'Tamil Classical');
-  const tamilFolk = SAMPLE_SONGS.filter(s => s.genre === 'Tamil Folk');
-  const tamilDevotional = SAMPLE_SONGS.filter(s => s.genre === 'Tamil Devotional');
-  const workoutSongs = SAMPLE_SONGS.filter(s => s.genre === 'Workout');
-  const focusSongs = SAMPLE_SONGS.filter(s => s.genre === 'Focus');
-  const nightVibes = SAMPLE_SONGS.filter(s => s.genre === 'Night Vibes');
+  // Group songs dynamically
+  const trendingSongs = songs.filter(s => (s.playCount || 0) > 2000000 || s.playCount === 1);
+  const tamilHits = songs.filter(s => s.genre === 'Tamil Hits');
+  const tamilTrending = songs.filter(s => s.genre === 'Tamil Trending');
+  const tamilMelody = songs.filter(s => s.genre === 'Tamil Melody');
+  const tamilLove = songs.filter(s => s.genre === 'Tamil Love');
+  const tamilChill = songs.filter(s => s.genre === 'Tamil Chill');
+  const tamilParty = songs.filter(s => s.genre === 'Tamil Party');
+  const tamilIndie = songs.filter(s => s.genre === 'Tamil Indie');
+  const tamilClassical = songs.filter(s => s.genre === 'Tamil Classical');
+  const tamilFolk = songs.filter(s => s.genre === 'Tamil Folk');
+  const tamilDevotional = songs.filter(s => s.genre === 'Tamil Devotional');
+  const workoutSongs = songs.filter(s => s.genre === 'Workout');
+  const focusSongs = songs.filter(s => s.genre === 'Focus');
+  const nightVibes = songs.filter(s => s.genre === 'Night Vibes');
 
   // Hero Featured Track
-  const heroSong = SAMPLE_SONGS[0];
+  const heroSong = songs[0] || SAMPLE_SONGS[0];
 
   return (
     <div style={{ paddingBottom: '32px' }}>

@@ -16,7 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { usePlayer } from '../context/PlayerContext';
 import { SAMPLE_SONGS } from '../utils/sampleData';
-import { uploadToStorage } from '../services/supabaseStorage';
+import { uploadToStorage, saveSongToSupabase } from '../services/supabaseStorage';
 import { formatNumber, formatDate } from '../utils/formatters';
 import Modal from '../components/common/Modal';
 import api from '../services/api';
@@ -24,9 +24,12 @@ import api from '../services/api';
 export default function ArtistDashboardPage() {
   const { user, isArtist, quickLogin } = useAuth();
   const { addToast } = useToast();
-  const { playSong } = usePlayer();
+  const { playSong, songs, addUploadedSong } = usePlayer();
 
-  const [tracks, setTracks] = useState(() => SAMPLE_SONGS.slice(0, 5));
+  // Find tracks belonging to this artist or initial studio set
+  const [tracks, setTracks] = useState(() => {
+    return songs.slice(0, 8);
+  });
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -72,7 +75,7 @@ export default function ArtistDashboardPage() {
     }
 
     setUploading(true);
-    addToast('Uploading track assets to Supabase Storage...', 'info', 2500);
+    addToast('Uploading cover & master audio to Supabase Storage...', 'info', 2500);
 
     try {
       let finalCoverUrl = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80';
@@ -88,8 +91,10 @@ export default function ArtistDashboardPage() {
       const newSong = {
         id: Date.now(),
         title: title.trim(),
-        artist: artistName.trim(),
+        artist: (artistName || user?.name || 'Artist').trim(),
+        artistName: (artistName || user?.name || 'Artist').trim(),
         album: album.trim() || 'Single',
+        albumTitle: album.trim() || 'Single',
         genre,
         language,
         coverUrl: finalCoverUrl,
@@ -98,21 +103,33 @@ export default function ArtistDashboardPage() {
         playCount: 1,
         releaseDate,
         description,
+        uploaderEmail: user?.email || '',
         lyrics: `[00:10.00] ${title} - Newly released on MUSIFY!`
       };
 
-      try {
-        await api.post('/artist/songs', newSong);
-      } catch {
-        // Fallback for offline/demo
+      // 1. Save track record to Supabase PostgreSQL table
+      const savedSb = await saveSongToSupabase(newSong);
+      if (savedSb && savedSb.id) {
+        newSong.id = savedSb.id;
       }
 
+      // 2. Also sync to Spring Boot Backend API
+      try {
+        await api.post('/artist/songs', newSong);
+      } catch (err) {
+        console.warn('Backend sync notice:', err.message);
+      }
+
+      // 3. Add to live player context & local cache
+      addUploadedSong(newSong);
       setTracks(prev => [newSong, ...prev]);
-      addToast(`"${newSong.title}" is now live on MUSIFY!`, 'success');
+
+      addToast(`"${newSong.title}" saved to Supabase & is live on MUSIFY!`, 'success', 3500);
 
       // Reset form
       setTitle('');
       setAlbum('');
+      setDescription('');
       setCoverFile(null);
       setCoverPreview('');
       setAudioFile(null);
