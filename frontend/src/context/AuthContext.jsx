@@ -189,21 +189,36 @@ export function AuthProvider({ children }) {
           };
           newJwt = sbAuthData.session?.access_token || ('sb_auth_' + Date.now());
           console.log('Account created in Supabase Auth:', newUser);
+        }
 
-          // Also save in Supabase public.users table if created
-          try {
-            await supabase.from('users').upsert([
-              {
-                supabase_uid: sbAuthData.user.id,
-                name,
-                email,
-                role,
-                profile_image: finalProfileImg
-              }
-            ], { onConflict: 'email' });
-          } catch (dbErr) {
-            console.warn('Supabase public.users sync:', dbErr);
+        // Always save account into Supabase public.users table
+        try {
+          const { data: dbUserData, error: dbErr } = await supabase.from('users').upsert([
+            {
+              supabase_uid: sbAuthData?.user?.id || null,
+              name,
+              email,
+              role,
+              profile_image: finalProfileImg
+            }
+          ], { onConflict: 'email' }).select();
+
+          if (dbUserData && dbUserData[0]) {
+            console.log('Account stored in Supabase public.users:', dbUserData[0]);
+            if (!newUser) {
+              newUser = {
+                id: dbUserData[0].id,
+                name: dbUserData[0].name,
+                email: dbUserData[0].email,
+                role: dbUserData[0].role,
+                profileImage: dbUserData[0].profile_image
+              };
+            }
+          } else if (dbErr) {
+            console.warn('Supabase public.users notice:', dbErr.message);
           }
+        } catch (dbErr) {
+          console.warn('Supabase public.users sync error:', dbErr);
         }
       } catch (err) {
         console.warn('Supabase Auth register exception:', err);
