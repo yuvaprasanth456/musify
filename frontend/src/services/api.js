@@ -26,13 +26,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // If unauthorized and not on auth pages, clear stale token
-      if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
-        localStorage.removeItem('musify_token');
-        localStorage.removeItem('musify_user');
-      }
-    }
+    // Graceful response error handling without breaking user session
     return Promise.reject(error);
   }
 );

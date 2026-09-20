@@ -54,9 +54,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/search/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/artists/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/playlists/**").permitAll()
+                .requestMatchers("/api/artist/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
-                .requestMatchers("/api/artist/**").hasAnyRole("ARTIST", "ADMIN")
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()
             );
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

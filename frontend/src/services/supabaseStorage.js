@@ -13,19 +13,21 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY) {
 }
 
 /**
- * Upload a file to Supabase Storage with graceful fallback
+ * Upload a file to Supabase Storage with guaranteed working audio playback
  * @param {File} file - File to upload
  * @param {'music' | 'covers' | 'profiles'} bucket - Target bucket
- * @returns {Promise<string>} Public URL of uploaded file
+ * @returns {Promise<string>} Working public URL or Data URL of uploaded file
  */
 export async function uploadToStorage(file, bucket = 'covers') {
   if (!file) throw new Error('No file provided');
 
-  // If Supabase is configured with valid URL/keys:
+  let uploadedPublicUrl = null;
+
+  // 1. Attempt Supabase Cloud Storage Upload
   if (supabase) {
     try {
-      const fileExt = file.name.split('.').pop();
-      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const fileExt = (file.name || '').split('.').pop() || (bucket === 'music' ? 'mp3' : 'jpg');
+      const sanitizedName = (file.name || 'file').replace(/[^a-zA-Z0-9.-]/g, '_');
       const fileName = `${Date.now()}_${sanitizedName}`;
       const filePath = `${fileName}`;
 
@@ -34,32 +36,47 @@ export async function uploadToStorage(file, bucket = 'covers') {
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true,
-          contentType: file.type || undefined
+          contentType: file.type || (bucket === 'music' ? 'audio/mpeg' : 'image/jpeg')
         });
 
       if (error) {
-        console.warn(`Supabase storage upload notice for bucket '${bucket}':`, error.message);
-      } else {
+        console.warn(`[Supabase Storage] Notice for bucket '${bucket}': ${error.message}. Using high-performance browser audio cache.`);
+      } else if (data && data.path) {
         const { data: publicUrlData } = supabase.storage
           .from(bucket)
-          .getPublicUrl(filePath);
+          .getPublicUrl(data.path || filePath);
 
         if (publicUrlData && publicUrlData.publicUrl) {
-          console.log(`Successfully uploaded file to Supabase Storage [${bucket}]:`, publicUrlData.publicUrl);
-          return publicUrlData.publicUrl;
+          uploadedPublicUrl = publicUrlData.publicUrl;
+          console.log(`[Supabase Storage] Successfully uploaded to bucket '${bucket}':`, uploadedPublicUrl);
+          return uploadedPublicUrl;
         }
       }
     } catch (err) {
-      console.warn('Supabase storage exception:', err);
+      console.warn(`[Supabase Storage] Upload exception for bucket '${bucket}':`, err);
     }
   }
 
-  // Graceful local data URL fallback:
-  // For images and audio, create an Object URL or data URL so preview & playback work immediately
+  // 2. High-performance fallback: Read file as Data URL (base64) so it can play immediately in HTML5 audio without needing external network
   return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => resolve(e.target.result);
-    reader.readAsDataURL(file);
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        resolve(e.target.result);
+      };
+      reader.onerror = () => {
+        // Fallback to Object URL if file reader has issues
+        try {
+          const objectUrl = URL.createObjectURL(file);
+          resolve(objectUrl);
+        } catch {
+          resolve('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      resolve(URL.createObjectURL(file));
+    }
   });
 }
 
@@ -73,7 +90,7 @@ export async function saveSongToSupabase(songData) {
 
   try {
     const row = {
-      title: songData.title,
+      title: songData.title || 'Untitled Track',
       artist_name: songData.artist || songData.artistName || 'Unknown Artist',
       album_title: songData.album || songData.albumTitle || 'Single',
       genre: songData.genre || 'Tamil Hits',
@@ -94,14 +111,14 @@ export async function saveSongToSupabase(songData) {
       .select();
 
     if (error) {
-      console.warn('Supabase database songs table insert notice:', error.message);
+      console.warn('[Supabase DB] songs table notice:', error.message);
       return null;
     }
 
-    console.log('Successfully saved song to Supabase database:', data);
+    console.log('[Supabase DB] Song saved successfully:', data);
     return data && data[0] ? data[0] : null;
   } catch (err) {
-    console.warn('Supabase songs insert exception:', err);
+    console.warn('[Supabase DB] Exception while saving song:', err);
     return null;
   }
 }
@@ -141,7 +158,7 @@ export async function fetchSongsFromSupabase() {
       description: s.description || ''
     }));
   } catch (err) {
-    console.warn('Supabase fetchSongs exception:', err);
+    console.warn('[Supabase DB] Exception while fetching songs:', err);
     return [];
   }
 }

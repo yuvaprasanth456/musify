@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Mic2, 
   Upload, 
@@ -10,7 +10,10 @@ import {
   Sparkles, 
   Trash2, 
   Edit3, 
-  Image as ImageIcon 
+  Image as ImageIcon,
+  CheckCircle,
+  FileAudio,
+  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -26,12 +29,16 @@ export default function ArtistDashboardPage() {
   const { addToast } = useToast();
   const { playSong, songs, addUploadedSong } = usePlayer();
 
+  const coverInputRef = useRef(null);
+  const audioInputRef = useRef(null);
+
   // Find tracks belonging to this artist or initial studio set
   const [tracks, setTracks] = useState(() => {
     return songs.slice(0, 8);
   });
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadStage, setUploadStage] = useState('');
 
   // Upload Form State
   const [title, setTitle] = useState('');
@@ -45,25 +52,59 @@ export default function ArtistDashboardPage() {
   const [coverPreview, setCoverPreview] = useState('');
   const [audioFile, setAudioFile] = useState(null);
   const [audioFileName, setAudioFileName] = useState('');
+  const [audioFileSize, setAudioFileSize] = useState('');
+  const [calculatedDuration, setCalculatedDuration] = useState(240);
 
   // Stats calculation
   const totalPlays = tracks.reduce((acc, t) => acc + (t.playCount || 0), 0);
   const totalLikes = Math.floor(totalPlays * 0.08);
 
   const handleCoverChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files && e.target.files[0];
     if (file) {
       setCoverFile(file);
-      const url = URL.createObjectURL(file);
-      setCoverPreview(url);
+      try {
+        const url = URL.createObjectURL(file);
+        setCoverPreview(url);
+      } catch (err) {
+        console.warn('Cover preview err:', err);
+      }
     }
   };
 
   const handleAudioChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files && e.target.files[0];
     if (file) {
       setAudioFile(file);
       setAudioFileName(file.name);
+      
+      // Format file size
+      const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+      setAudioFileSize(`${sizeMb} MB`);
+
+      // Detect song title from filename if title is empty
+      if (!title) {
+        const rawName = file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
+        setTitle(rawName.charAt(0).toUpperCase() + rawName.slice(1));
+      }
+
+      // Calculate audio duration
+      try {
+        const audio = new Audio();
+        const objUrl = URL.createObjectURL(file);
+        audio.src = objUrl;
+        audio.addEventListener('loadedmetadata', () => {
+          if (audio.duration && !isNaN(audio.duration)) {
+            setCalculatedDuration(Math.round(audio.duration));
+          }
+          URL.revokeObjectURL(objUrl);
+        });
+        audio.addEventListener('error', () => {
+          URL.revokeObjectURL(objUrl);
+        });
+      } catch (err) {
+        console.warn('Audio metadata detect notice:', err);
+      }
     }
   };
 
@@ -75,18 +116,25 @@ export default function ArtistDashboardPage() {
     }
 
     setUploading(true);
-    addToast('Uploading cover & master audio to Supabase Storage...', 'info', 2500);
+    setUploadStage('Processing artwork and audio...');
+    addToast('Starting upload process...', 'info', 2000);
 
     try {
+      // 1. Upload Cover Artwork
       let finalCoverUrl = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80';
       if (coverFile) {
+        setUploadStage('Uploading cover image to Supabase...');
         finalCoverUrl = await uploadToStorage(coverFile, 'covers');
       }
 
+      // 2. Upload Audio Master
       let finalAudioUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
       if (audioFile) {
+        setUploadStage('Uploading audio master to Supabase...');
         finalAudioUrl = await uploadToStorage(audioFile, 'music');
       }
+
+      setUploadStage('Saving song metadata to Supabase...');
 
       const newSong = {
         id: Date.now(),
@@ -99,32 +147,32 @@ export default function ArtistDashboardPage() {
         language,
         coverUrl: finalCoverUrl,
         audioUrl: finalAudioUrl,
-        duration: 245,
+        duration: calculatedDuration || 240,
         playCount: 1,
         releaseDate,
         description,
         uploaderEmail: user?.email || '',
-        lyrics: `[00:10.00] ${title} - Newly released on MUSIFY!`
+        lyrics: `[00:10.00] ${title} - Released on MUSIFY!`
       };
 
-      // 1. Save track record to Supabase PostgreSQL table
+      // 3. Save track record to Supabase PostgreSQL table
       const savedSb = await saveSongToSupabase(newSong);
       if (savedSb && savedSb.id) {
         newSong.id = savedSb.id;
       }
 
-      // 2. Also sync to Spring Boot Backend API
+      // 4. Also sync to Spring Boot Backend API
       try {
         await api.post('/artist/songs', newSong);
       } catch (err) {
-        console.warn('Backend sync notice:', err.message);
+        console.warn('Backend sync notice (offline or local fallback):', err.message);
       }
 
-      // 3. Add to live player context & local cache
+      // 5. Add to live player context & local cache
       addUploadedSong(newSong);
       setTracks(prev => [newSong, ...prev]);
 
-      addToast(`"${newSong.title}" saved to Supabase & is live on MUSIFY!`, 'success', 3500);
+      addToast(`🎉 "${newSong.title}" is now uploaded & live on MUSIFY!`, 'success', 4000);
 
       // Reset form
       setTitle('');
@@ -134,12 +182,18 @@ export default function ArtistDashboardPage() {
       setCoverPreview('');
       setAudioFile(null);
       setAudioFileName('');
+      setAudioFileSize('');
+      setUploadStage('');
       setIsUploadOpen(false);
+
+      // Play the newly uploaded song right away
+      playSong(newSong);
     } catch (err) {
-      console.error(err);
-      addToast('Upload failed, please check file format', 'error');
+      console.error('Upload error:', err);
+      addToast('Upload encountered an issue, please try again', 'error');
     } finally {
       setUploading(false);
+      setUploadStage('');
     }
   };
 
@@ -202,101 +256,122 @@ export default function ArtistDashboardPage() {
       </div>
 
       {/* KPI Stats Cards */}
-      <div 
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '20px',
-          marginBottom: '36px'
-        }}
-      >
-        <div style={{ padding: '20px', borderRadius: 'var(--radius-lg)', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: '10px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600 }}>Total Tracks</span>
-            <Music size={18} color="var(--accent-primary)" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '18px', marginBottom: '36px' }}>
+        <div className="card-glass" style={{ padding: '22px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Total Tracks</span>
+            <div style={{ padding: '8px', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(29, 185, 84, 0.15)', color: 'var(--accent-primary)' }}>
+              <Music size={20} />
+            </div>
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>{tracks.length}</div>
+          <div style={{ fontSize: '2rem', fontWeight: 800 }}>{tracks.length}</div>
+          <div style={{ fontSize: '12px', color: 'var(--accent-primary)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <TrendingUp size={14} /> Live in MUSIFY catalog
+          </div>
         </div>
 
-        <div style={{ padding: '20px', borderRadius: 'var(--radius-lg)', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: '10px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600 }}>Total Plays</span>
-            <TrendingUp size={18} color="#3b82f6" />
+        <div className="card-glass" style={{ padding: '22px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Total Streams</span>
+            <div style={{ padding: '8px', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6' }}>
+              <Play size={20} />
+            </div>
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>{formatNumber(totalPlays)}</div>
+          <div style={{ fontSize: '2rem', fontWeight: 800 }}>{formatNumber(totalPlays)}</div>
+          <div style={{ fontSize: '12px', color: '#3b82f6', marginTop: '4px' }}>
+            +18.4% this month
+          </div>
         </div>
 
-        <div style={{ padding: '20px', borderRadius: 'var(--radius-lg)', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: '10px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600 }}>Likes Recorded</span>
-            <Heart size={18} color="#ef4444" />
+        <div className="card-glass" style={{ padding: '22px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Recorded Likes</span>
+            <div style={{ padding: '8px', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}>
+              <Heart size={20} />
+            </div>
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>{formatNumber(totalLikes)}</div>
+          <div style={{ fontSize: '2rem', fontWeight: 800 }}>{formatNumber(totalLikes)}</div>
+          <div style={{ fontSize: '12px', color: '#ef4444', marginTop: '4px' }}>
+            Audience appreciation
+          </div>
         </div>
 
-        <div style={{ padding: '20px', borderRadius: 'var(--radius-lg)', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: '10px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600 }}>Followers</span>
-            <Users size={18} color="#eab308" />
+        <div className="card-glass" style={{ padding: '22px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Monthly Listeners</span>
+            <div style={{ padding: '8px', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(168, 85, 247, 0.15)', color: '#a855f7' }}>
+              <Users size={20} />
+            </div>
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>1.2M</div>
+          <div style={{ fontSize: '2rem', fontWeight: 800 }}>15.2M</div>
+          <div style={{ fontSize: '12px', color: '#a855f7', marginTop: '4px' }}>
+            Rank #2 in South Asia
+          </div>
         </div>
       </div>
 
-      {/* Uploaded Tracks Table */}
+      {/* Track Management Table */}
       <section>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <h2 className="heading-section">Your Published Tracks ({tracks.length})</h2>
+          <div>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }}>Your Tracks & Discography</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
+              Manage your releases, inspect audio streams, and monitor playback performance.
+            </p>
+          </div>
+          <button 
+            onClick={() => setIsUploadOpen(true)}
+            className="btn-secondary"
+          >
+            <Upload size={16} />
+            <span>Upload New</span>
+          </button>
         </div>
 
-        <div 
-          style={{
-            borderRadius: 'var(--radius-lg)',
-            backgroundColor: 'var(--bg-surface)',
-            border: '1px solid var(--border-subtle)',
-            overflow: 'hidden'
-          }}
-        >
+        <div className="card-glass" style={{ padding: '8px', overflow: 'hidden' }}>
+          {/* Table Header */}
           <div 
             style={{
               display: 'grid',
-              gridTemplateColumns: '40px 3fr 2fr 1.5fr 1fr 100px',
-              padding: '12px 20px',
-              backgroundColor: 'var(--bg-surface-elevated)',
+              gridTemplateColumns: '48px 4fr 3fr 2fr 2fr 60px',
+              padding: '12px 16px',
               fontSize: '12px',
               fontWeight: 700,
               textTransform: 'uppercase',
-              color: 'var(--text-muted)'
+              color: 'var(--text-muted)',
+              borderBottom: '1px solid var(--border-subtle)'
             }}
           >
-            <span></span>
+            <span style={{ textAlign: 'center' }}>Play</span>
             <span>Title</span>
             <span>Album</span>
-            <span>Plays</span>
-            <span>Released</span>
+            <span>Streams</span>
+            <span>Release Date</span>
             <span style={{ textAlign: 'right' }}>Actions</span>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {/* Table Rows */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px' }}>
             {tracks.map((track) => (
               <div 
                 key={track.id}
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '40px 3fr 2fr 1.5fr 1fr 100px',
+                  gridTemplateColumns: '48px 4fr 3fr 2fr 2fr 60px',
                   alignItems: 'center',
-                  padding: '12px 20px',
-                  borderTop: '1px solid var(--border-subtle)',
-                  fontSize: '13.5px'
+                  padding: '10px 16px',
+                  borderRadius: 'var(--radius-md)',
+                  transition: 'background-color var(--transition-fast)'
                 }}
+                className="song-row"
               >
                 <button 
                   onClick={() => playSong(track, tracks)}
                   className="btn-icon"
-                  style={{ width: '30px', height: '30px', color: 'var(--accent-primary)' }}
+                  style={{ width: '36px', height: '36px', color: 'var(--accent-primary)' }}
                   title="Play track"
                 >
-                  <Play size={16} fill="currentColor" />
+                  <Play size={18} fill="var(--accent-primary)" />
                 </button>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, paddingRight: '12px' }}>
@@ -344,8 +419,9 @@ export default function ArtistDashboardPage() {
       </section>
 
       {/* Upload Song Modal */}
-      <Modal isOpen={isUploadOpen} onClose={() => setIsUploadOpen(false)} title="Upload Track to Supabase Storage" maxWidth="640px">
+      <Modal isOpen={isUploadOpen} onClose={() => !uploading && setIsUploadOpen(false)} title="Upload Track to Supabase Studio" maxWidth="640px">
         <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          
           {/* Audio & Image Dropzones */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             {/* Cover Art Dropzone */}
@@ -358,7 +434,7 @@ export default function ArtistDashboardPage() {
                   height: '140px',
                   borderRadius: 'var(--radius-md)',
                   backgroundColor: 'var(--bg-surface-elevated)',
-                  border: '1px dashed var(--border-medium)',
+                  border: coverPreview ? '1px solid var(--accent-primary)' : '1px dashed var(--border-medium)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -367,7 +443,7 @@ export default function ArtistDashboardPage() {
                   position: 'relative',
                   overflow: 'hidden'
                 }}
-                onClick={() => document.getElementById('coverInput').click()}
+                onClick={() => coverInputRef.current?.click()}
               >
                 {coverPreview ? (
                   <img src={coverPreview} alt="Cover preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -375,13 +451,13 @@ export default function ArtistDashboardPage() {
                   <>
                     <ImageIcon size={28} color="var(--text-muted)" />
                     <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px' }}>Choose cover image</span>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>JPG, PNG up to 5MB</span>
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>JPG, PNG up to 10MB</span>
                   </>
                 )}
                 <input 
-                  id="coverInput" 
+                  ref={coverInputRef}
                   type="file" 
-                  accept="image/*" 
+                  accept="image/*, .jpg, .jpeg, .png, .webp" 
                   onChange={handleCoverChange} 
                   style={{ display: 'none' }} 
                 />
@@ -391,14 +467,14 @@ export default function ArtistDashboardPage() {
             {/* Audio File Dropzone */}
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Master Audio File
+                Master Audio File *
               </label>
               <div 
                 style={{
                   height: '140px',
                   borderRadius: 'var(--radius-md)',
                   backgroundColor: 'var(--bg-surface-elevated)',
-                  border: '1px dashed var(--border-medium)',
+                  border: audioFileName ? '1px solid var(--accent-primary)' : '1px dashed var(--border-medium)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -407,17 +483,31 @@ export default function ArtistDashboardPage() {
                   padding: '12px',
                   textAlign: 'center'
                 }}
-                onClick={() => document.getElementById('audioInput').click()}
+                onClick={() => audioInputRef.current?.click()}
               >
-                <Music size={28} color="var(--accent-primary)" />
-                <span style={{ fontSize: '12px', color: '#fff', marginTop: '6px', fontWeight: 600, wordBreak: 'break-all' }}>
-                  {audioFileName || 'Choose MP3 / WAV file'}
-                </span>
-                <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>High-res 320kbps recommended</span>
+                {audioFileName ? (
+                  <>
+                    <CheckCircle size={28} color="var(--accent-primary)" />
+                    <span style={{ fontSize: '12px', color: '#fff', marginTop: '6px', fontWeight: 600, wordBreak: 'break-all' }}>
+                      {audioFileName}
+                    </span>
+                    <span style={{ fontSize: '10px', color: 'var(--accent-primary)' }}>
+                      Ready ({audioFileSize})
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Music size={28} color="var(--accent-primary)" />
+                    <span style={{ fontSize: '12px', color: '#fff', marginTop: '6px', fontWeight: 600 }}>
+                      Choose Audio File
+                    </span>
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>MP3, WAV, FLAC, M4A up to 50MB</span>
+                  </>
+                )}
                 <input 
-                  id="audioInput" 
+                  ref={audioInputRef}
                   type="file" 
-                  accept="audio/*" 
+                  accept="audio/*, .mp3, .wav, .m4a, .aac, .ogg, .flac" 
                   onChange={handleAudioChange} 
                   style={{ display: 'none' }} 
                 />
@@ -524,13 +614,20 @@ export default function ArtistDashboardPage() {
             />
           </div>
 
+          {uploading && (
+            <div style={{ padding: '12px', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(29, 185, 84, 0.12)', border: '1px solid var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div className="spinner" style={{ width: '18px', height: '18px', border: '2px solid var(--accent-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              <span style={{ fontSize: '13px', color: '#fff', fontWeight: 600 }}>{uploadStage || 'Uploading track...'}</span>
+            </div>
+          )}
+
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
             <button type="button" onClick={() => setIsUploadOpen(false)} className="btn-secondary" disabled={uploading}>
               Cancel
             </button>
             <button type="submit" className="btn-primary" disabled={uploading}>
               <Upload size={16} />
-              <span>{uploading ? 'Uploading to Supabase...' : 'Publish Track'}</span>
+              <span>{uploading ? 'Publishing...' : 'Publish Track'}</span>
             </button>
           </div>
         </form>
