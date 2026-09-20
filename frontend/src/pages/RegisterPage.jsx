@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Music2, UserPlus, Headphones, Mic2 } from 'lucide-react';
+import { Music2, UserPlus, Headphones, Mic2, Upload, Camera, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { uploadToStorage } from '../services/supabaseStorage';
 
 const AVATARS = [
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
@@ -16,6 +17,7 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const { register, loading } = useAuth();
   const { addToast } = useToast();
+  const fileInputRef = useRef(null);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -23,6 +25,29 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState('USER'); // 'USER' | 'ARTIST'
   const [selectedAvatar, setSelectedAvatar] = useState(AVATARS[0]);
+  const [customAvatarFile, setCustomAvatarFile] = useState(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const handleCustomAvatar = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    setUploadingAvatar(true);
+    addToast('Uploading avatar to Supabase profiles bucket...', 'info', 2000);
+
+    try {
+      const publicUrl = await uploadToStorage(file, 'profiles');
+      setSelectedAvatar(publicUrl);
+      setCustomAvatarFile(file);
+      addToast('Profile picture uploaded to Supabase profiles bucket!', 'success', 2500);
+    } catch (err) {
+      console.warn('Avatar upload notice:', err);
+      // Fallback preview
+      setSelectedAvatar(URL.createObjectURL(file));
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,7 +64,18 @@ export default function RegisterPage() {
       return;
     }
 
-    const res = await register(name, email, password, role, selectedAvatar);
+    let finalAvatarUrl = selectedAvatar;
+
+    // If custom avatar wasn't uploaded yet, upload now
+    if (customAvatarFile && !finalAvatarUrl.startsWith('http')) {
+      try {
+        finalAvatarUrl = await uploadToStorage(customAvatarFile, 'profiles');
+      } catch (err) {
+        console.warn('Final avatar upload fallback:', err);
+      }
+    }
+
+    const res = await register(name, email, password, role, finalAvatarUrl);
     if (res.success) {
       navigate(role === 'ARTIST' ? '/artist/dashboard' : '/');
     }
@@ -139,30 +175,98 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Profile Image Picker */}
+          {/* Profile Image Picker with Supabase Profiles upload */}
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-              Choose your profile avatar:
-            </label>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                Profile Avatar:
+              </label>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--accent-primary)',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <Upload size={14} />
+                <span>{uploadingAvatar ? 'Uploading to Supabase...' : 'Upload from device'}</span>
+              </button>
+              <input 
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleCustomAvatar}
+                style={{ display: 'none' }}
+              />
+            </div>
+
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              {AVATARS.map((url, idx) => (
+              {/* Selected Avatar Preview */}
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  position: 'relative',
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  border: '2px solid var(--accent-primary)',
+                  boxShadow: '0 0 10px rgba(29, 185, 84, 0.4)',
+                  flexShrink: 0
+                }}
+                title="Click to change avatar file"
+              >
                 <img
-                  key={idx}
-                  src={url}
-                  alt={`Avatar ${idx + 1}`}
-                  onClick={() => setSelectedAvatar(url)}
-                  style={{
-                    width: '42px',
-                    height: '42px',
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    cursor: 'pointer',
-                    border: selectedAvatar === url ? '2.5px solid var(--accent-primary)' : '2px solid transparent',
-                    transform: selectedAvatar === url ? 'scale(1.1)' : 'scale(1)',
-                    transition: 'all var(--transition-fast)'
-                  }}
+                  src={selectedAvatar}
+                  alt="Selected avatar"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
-              ))}
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'rgba(0,0,0,0.35)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Camera size={18} color="#fff" />
+                </div>
+              </div>
+
+              {/* Sample Quick Avatars */}
+              <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '4px 0' }}>
+                {AVATARS.map((url, idx) => (
+                  <img
+                    key={idx}
+                    src={url}
+                    alt={`Avatar ${idx + 1}`}
+                    onClick={() => {
+                      setSelectedAvatar(url);
+                      setCustomAvatarFile(null);
+                    }}
+                    style={{
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      cursor: 'pointer',
+                      border: selectedAvatar === url ? '2.5px solid var(--accent-primary)' : '2px solid transparent',
+                      opacity: selectedAvatar === url ? 1 : 0.65,
+                      transform: selectedAvatar === url ? 'scale(1.08)' : 'scale(1)',
+                      transition: 'all var(--transition-fast)'
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
@@ -203,7 +307,7 @@ export default function RegisterPage() {
                 type="password" 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
-                placeholder="Min 6 characters"
+                placeholder="Min. 6 chars"
                 required 
                 style={{ width: '100%' }}
               />
@@ -227,18 +331,18 @@ export default function RegisterPage() {
           <button 
             type="submit" 
             className="btn-primary" 
-            style={{ width: '100%', padding: '12px', marginTop: '10px' }}
-            disabled={loading}
+            disabled={loading || uploadingAvatar}
+            style={{ width: '100%', padding: '14px', marginTop: '10px', fontSize: '15px' }}
           >
-            <UserPlus size={16} />
-            <span>{loading ? 'Creating account...' : 'Create Account'}</span>
+            <UserPlus size={18} />
+            <span>{loading ? 'Creating Account in Supabase...' : 'Create Account'}</span>
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px', color: 'var(--text-secondary)' }}>
           Already have an account?{' '}
           <Link to="/login" style={{ color: 'var(--accent-primary)', fontWeight: 700 }}>
-            Log in here
+            Log In
           </Link>
         </div>
       </div>
