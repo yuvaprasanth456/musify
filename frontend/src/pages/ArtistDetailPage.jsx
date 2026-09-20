@@ -9,15 +9,16 @@ import SongRow from '../components/cards/SongRow';
 
 export default function ArtistDetailPage() {
   const { id } = useParams();
-  const { playSong } = usePlayer();
+  const { playSong, songs } = usePlayer();
   const { addToast } = useToast();
   const [isFollowing, setIsFollowing] = useState(false);
 
   const artistId = parseInt(id, 10);
   const artist = SAMPLE_ARTISTS.find(a => a.id === artistId) || SAMPLE_ARTISTS[0];
 
-  const artistSongs = SAMPLE_SONGS.filter(s => s.artist.toLowerCase().includes(artist.name.toLowerCase().split(' ')[0]));
-  const popularSongs = artistSongs.length > 0 ? artistSongs : SAMPLE_SONGS.slice(0, 5);
+  const allSongs = songs || SAMPLE_SONGS;
+  const artistSongs = allSongs.filter(s => (s.artist || s.artistName || '').toLowerCase().includes(artist.name.toLowerCase().split(' ')[0]));
+  const popularSongs = artistSongs.length > 0 ? artistSongs : allSongs.slice(0, 5);
 
   const handleFollowToggle = () => {
     setIsFollowing(prev => {
