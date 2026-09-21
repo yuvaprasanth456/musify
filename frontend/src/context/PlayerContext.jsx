@@ -571,7 +571,9 @@ export function PlayerProvider({ children }) {
         addToQueue,
         removeFromQueue,
         clearQueue,
-        recentlyPlayed
+        recentlyPlayed,
+        deleteSong,
+        refreshSongs
       }}
     >
       {children}
