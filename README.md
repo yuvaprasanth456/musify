@@ -186,16 +186,5 @@ JWT_SECRET=your-secure-jwt-secret-key-at-least-256-bits-long
 
 ---
 
-## 🧪 Quick Test Credentials
-
-| Account Role | Email | Password |
-|---|---|---|
-| **Listener Demo** | `user@musify.io` | `password123` |
-| **Artist Studio Demo** | `anirudh@musify.io` | `password123` |
-
-You can also click **"Listener Demo"** or **"Artist Demo"** directly on the Login screen for 1-click access.
-
----
-
 ## 📜 License
 This project is open-source and created for educational and commercial streaming architecture demonstration. All sample audio tracks are open-licensed, royalty-free audio files.
