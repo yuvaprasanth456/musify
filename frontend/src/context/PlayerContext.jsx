@@ -62,12 +62,20 @@ export function PlayerProvider({ children }) {
 
   // User Library in-memory & local storage sync
   const [likedSongIds, setLikedSongIds] = useState(() => {
-    const saved = localStorage.getItem('musify_liked_songs');
-    return saved ? JSON.parse(saved).filter(id => id > 16) : [];
+    try {
+      const saved = localStorage.getItem('musify_liked_songs');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
   const [recentlyPlayed, setRecentlyPlayed] = useState(() => {
-    const saved = localStorage.getItem('musify_recent_songs');
-    return saved ? JSON.parse(saved).filter(s => s && s.id > 16) : [];
+    try {
+      const saved = localStorage.getItem('musify_recent_songs');
+      return saved ? JSON.parse(saved).filter(s => s && !s.audioUrl?.includes('soundhelix.com')) : [];
+    } catch {
+      return [];
+    }
   });
 
   // Refresh songs from Supabase
