@@ -21,7 +21,7 @@ import NotFoundPage from './pages/NotFoundPage';
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <ToastProvider>
         <AuthProvider>
           <PlayerProvider>
