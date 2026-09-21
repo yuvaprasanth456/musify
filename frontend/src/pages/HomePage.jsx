@@ -107,6 +107,7 @@ export default function HomePage() {
               <img 
                 src={heroSong.coverUrl} 
                 alt={heroSong.title} 
+                onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80'; }}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
               />
             ) : (

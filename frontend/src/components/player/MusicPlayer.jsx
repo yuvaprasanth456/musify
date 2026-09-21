@@ -63,8 +63,9 @@ export default function MusicPlayer() {
       {/* LEFT SECTION: Song Details & Artwork */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0 }}>
         <img 
-          src={currentSong.coverUrl} 
+          src={currentSong.coverUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80'} 
           alt={currentSong.title}
+          onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80'; }}
           onClick={() => navigate('/now-playing')}
           style={{ 
             width: '56px', 
