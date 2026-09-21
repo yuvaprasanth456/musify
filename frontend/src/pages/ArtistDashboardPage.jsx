@@ -163,7 +163,12 @@ export default function ArtistDashboardPage() {
 
       // 4. Also sync to Spring Boot Backend API
       try {
-        await api.post('/artist/songs', newSong);
+        const backendPayload = { ...newSong };
+        delete backendPayload.id;
+        const beRes = await api.post('/artist/songs', backendPayload);
+        if (beRes?.data?.id) {
+          newSong.id = beRes.data.id;
+        }
       } catch (err) {
         console.warn('Backend sync notice (offline or local fallback):', err.message);
       }

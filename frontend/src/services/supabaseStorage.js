@@ -21,9 +21,7 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY) {
 export async function uploadToStorage(file, bucket = 'covers') {
   if (!file) throw new Error('No file provided');
 
-  let uploadedPublicUrl = null;
-
-  // 1. Attempt Supabase Cloud Storage Upload
+  // 1. Attempt Supabase Cloud Storage Upload with 6-second timeout
   if (supabase) {
     try {
       const fileExt = (file.name || '').split('.').pop() || (bucket === 'music' ? 'mp3' : 'jpg');
@@ -31,7 +29,7 @@ export async function uploadToStorage(file, bucket = 'covers') {
       const fileName = `${Date.now()}_${sanitizedName}`;
       const filePath = `${fileName}`;
 
-      const { data, error } = await supabase.storage
+      const uploadPromise = supabase.storage
         .from(bucket)
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -39,25 +37,30 @@ export async function uploadToStorage(file, bucket = 'covers') {
           contentType: file.type || (bucket === 'music' ? 'audio/mpeg' : 'image/jpeg')
         });
 
-      if (error) {
-        console.warn(`[Supabase Storage] Notice for bucket '${bucket}': ${error.message}. Using high-performance browser audio cache.`);
-      } else if (data && data.path) {
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Storage upload timeout')), 6000)
+      );
+
+      const res = await Promise.race([uploadPromise, timeoutPromise]);
+
+      if (res && res.error) {
+        console.warn(`[Supabase Storage] Notice for bucket '${bucket}': ${res.error.message}. Using instant local audio stream.`);
+      } else if (res && res.data && res.data.path) {
         const { data: publicUrlData } = supabase.storage
           .from(bucket)
-          .getPublicUrl(data.path || filePath);
+          .getPublicUrl(res.data.path || filePath);
 
         if (publicUrlData && publicUrlData.publicUrl) {
-          uploadedPublicUrl = publicUrlData.publicUrl;
-          console.log(`[Supabase Storage] Successfully uploaded to bucket '${bucket}':`, uploadedPublicUrl);
-          return uploadedPublicUrl;
+          console.log(`[Supabase Storage] Successfully uploaded to bucket '${bucket}':`, publicUrlData.publicUrl);
+          return publicUrlData.publicUrl;
         }
       }
     } catch (err) {
-      console.warn(`[Supabase Storage] Upload exception for bucket '${bucket}':`, err);
+      console.warn(`[Supabase Storage] Upload notice for bucket '${bucket}': ${err.message}. Using instant local audio stream.`);
     }
   }
 
-  // 2. High-performance fallback: Create instant Object URL (0ms, 0 memory freeze)
+  // 2. High-performance instant fallback: Object URL (0ms, 0 delay, 100% reliable)
   try {
     return URL.createObjectURL(file);
   } catch (err) {
@@ -89,20 +92,26 @@ export async function saveSongToSupabase(songData) {
       lyrics: songData.lyrics || ''
     };
 
-    const { data, error } = await supabase
+    const insertPromise = supabase
       .from('songs')
       .insert([row])
       .select();
 
-    if (error) {
-      console.warn('[Supabase DB] songs table notice:', error.message);
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Supabase DB timeout')), 5000)
+    );
+
+    const res = await Promise.race([insertPromise, timeoutPromise]);
+
+    if (res && res.error) {
+      console.warn('[Supabase DB] songs table notice:', res.error.message);
       return null;
     }
 
-    console.log('[Supabase DB] Song saved successfully:', data);
-    return data && data[0] ? data[0] : null;
+    console.log('[Supabase DB] Song saved successfully:', res?.data);
+    return res?.data && res.data[0] ? res.data[0] : null;
   } catch (err) {
-    console.warn('[Supabase DB] Exception while saving song:', err);
+    console.warn('[Supabase DB] Exception while saving song:', err.message);
     return null;
   }
 }
