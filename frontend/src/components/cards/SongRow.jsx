@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { Play, Pause, Heart, ListPlus, Radio, Share2 } from 'lucide-react';
+import { Play, Pause, Heart, ListPlus, Radio, Share2, Trash2 } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { formatTime } from '../../utils/formatters';
 import DropdownMenu from '../common/DropdownMenu';
 
 export default function SongRow({ song, index, playlist = null, onAddToPlaylist = null, onRemoveFromPlaylist = null }) {
-  const { currentSong, isPlaying, playSong, togglePlay, toggleLike, isLiked, addToQueue } = usePlayer();
+  const { currentSong, isPlaying, playSong, togglePlay, toggleLike, isLiked, addToQueue, deleteSong } = usePlayer();
+  const { isArtist } = useAuth();
   const { addToast } = useToast();
   const [isHovered, setIsHovered] = useState(false);
 
@@ -55,7 +57,17 @@ export default function SongRow({ song, index, playlist = null, onAddToPlaylist 
         navigator.clipboard?.writeText(window.location.origin + '/?song=' + song.id);
         addToast('Song link copied', 'info', 2000);
       }
-    }
+    },
+    ...(isArtist ? [{
+      label: 'Delete Song from Supabase',
+      icon: <Trash2 size={15} color="#ef4444" />,
+      danger: true,
+      onClick: () => {
+        if (window.confirm(`Delete "${song.title}" from Supabase and streaming?`)) {
+          deleteSong(song.id);
+        }
+      }
+    }] : [])
   ];
 
   return (
