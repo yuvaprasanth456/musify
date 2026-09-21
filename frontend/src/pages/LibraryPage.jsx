@@ -149,8 +149,8 @@ export default function LibraryPage() {
           </div>
         ))}
 
-        {/* 3. Followed Artists */}
-        {(activeTab === 'All' || activeTab === 'Artists') && SAMPLE_ARTISTS.map(artist => (
+        {/* 3. Artists */}
+        {(activeTab === 'All' || activeTab === 'Artists') && artists.map(artist => (
           <div
             key={artist.id}
             className="music-card"
