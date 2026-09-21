@@ -155,14 +155,38 @@ export function AuthProvider({ children }) {
 
   const register = async (name, email, password, role = 'USER', profileImage = '') => {
     setLoading(true);
-    const finalProfileImg = profileImage || (role === 'ARTIST' 
-      ? 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80'
-      : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80');
+    const finalProfileImg = (profileImage && profileImage.startsWith('http'))
+      ? profileImage 
+      : (role === 'ARTIST' 
+          ? 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=500&auto=format&fit=crop&q=80'
+          : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80');
 
     let newUser = null;
     let newJwt = null;
+    let errorMessage = null;
 
-    // 1. Register with Supabase Auth
+    // 1. Register with Spring Boot Backend API
+    try {
+      const response = await api.post('/auth/register', {
+        name,
+        email,
+        password,
+        role,
+        profileImage: finalProfileImg
+      });
+      if (response.data?.token) {
+        newJwt = response.data.token;
+        newUser = response.data.user;
+        console.log('Registered with backend API:', newUser);
+      }
+    } catch (backendErr) {
+      console.warn('Backend register notice:', backendErr.response?.data?.message || backendErr.message);
+      if (backendErr.response?.data?.message) {
+        errorMessage = backendErr.response.data.message;
+      }
+    }
+
+    // 2. Also register with Supabase Auth
     if (supabase) {
       try {
         const { data: sbAuthData, error: sbAuthErr } = await supabase.auth.signUp({
@@ -179,70 +203,43 @@ export function AuthProvider({ children }) {
 
         if (sbAuthErr) {
           console.warn('Supabase Auth signUp notice:', sbAuthErr.message);
+          if (!errorMessage) errorMessage = sbAuthErr.message;
         } else if (sbAuthData?.user) {
-          newUser = {
-            id: sbAuthData.user.id,
-            name,
-            email,
-            role,
-            profileImage: finalProfileImg
-          };
-          newJwt = sbAuthData.session?.access_token || ('sb_auth_' + Date.now());
-          console.log('Account created in Supabase Auth:', newUser);
+          if (!newUser) {
+            newUser = {
+              id: sbAuthData.user.id,
+              name,
+              email,
+              role,
+              profileImage: finalProfileImg
+            };
+          }
+          if (!newJwt && sbAuthData.session?.access_token) {
+            newJwt = sbAuthData.session.access_token;
+          }
+          console.log('Registered with Supabase Auth:', sbAuthData.user);
         }
 
-        // Always save account into Supabase public.users table
+        // Sync into public.users table if it exists
         try {
-          const { data: dbUserData, error: dbErr } = await supabase.from('users').upsert([
+          await supabase.from('users').upsert([
             {
-              supabase_uid: sbAuthData?.user?.id || null,
               name,
               email,
               role,
               profile_image: finalProfileImg
             }
-          ], { onConflict: 'email' }).select();
-
-          if (dbUserData && dbUserData[0]) {
-            console.log('Account stored in Supabase public.users:', dbUserData[0]);
-            if (!newUser) {
-              newUser = {
-                id: dbUserData[0].id,
-                name: dbUserData[0].name,
-                email: dbUserData[0].email,
-                role: dbUserData[0].role,
-                profileImage: dbUserData[0].profile_image
-              };
-            }
-          } else if (dbErr) {
-            console.warn('Supabase public.users notice:', dbErr.message);
-          }
+          ], { onConflict: 'email' });
         } catch (dbErr) {
-          console.warn('Supabase public.users sync error:', dbErr);
+          console.warn('Supabase public.users notice:', dbErr);
         }
       } catch (err) {
         console.warn('Supabase Auth register exception:', err);
       }
     }
 
-    // 2. Also register in Spring Boot backend
-    try {
-      const response = await api.post('/auth/register', {
-        name,
-        email,
-        password,
-        role,
-        profileImage: finalProfileImg
-      });
-      const { token: jwt, user: userData } = response.data;
-      if (jwt) newJwt = jwt;
-      if (userData) newUser = userData;
-    } catch (backendErr) {
-      console.warn('Backend register notice:', backendErr.message);
-    }
-
     // 3. Fallback state creation if needed
-    if (!newUser) {
+    if (!newUser && !errorMessage) {
       newUser = {
         id: Math.floor(Math.random() * 1000) + 10,
         name,
@@ -254,10 +251,17 @@ export function AuthProvider({ children }) {
     }
 
     setLoading(false);
-    setToken(newJwt);
-    setUser(newUser);
-    addToast(`Account registered and saved in Supabase! Welcome, ${name}.`, 'success');
-    return { success: true, user: newUser };
+
+    if (newUser) {
+      const activeToken = newJwt || ('musify_jwt_' + Date.now());
+      setToken(activeToken);
+      setUser(newUser);
+      addToast(`Account created successfully! Welcome, ${name}.`, 'success');
+      return { success: true, user: newUser };
+    } else {
+      addToast(errorMessage || 'Failed to create account. Please try again.', 'error');
+      return { success: false, message: errorMessage };
+    }
   };
 
   const logout = () => {
