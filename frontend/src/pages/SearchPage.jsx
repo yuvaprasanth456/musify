@@ -49,14 +49,22 @@ export default function SearchPage() {
         (s.album || s.albumTitle || '').toLowerCase().includes(q)
       );
 
-      const matchedArtists = SAMPLE_ARTISTS.filter(a => 
+      const artistMap = new Map();
+      (songs || []).forEach(s => {
+        const name = s.artist || s.artistName;
+        if (name && !artistMap.has(name.toLowerCase())) {
+          artistMap.set(name.toLowerCase(), {
+            id: s.artistId || s.id,
+            name: name,
+            imageUrl: s.coverUrl
+          });
+        }
+      });
+      const matchedArtists = Array.from(artistMap.values()).filter(a =>
         a.name.toLowerCase().includes(q)
       );
 
-      const matchedPlaylists = SAMPLE_PLAYLISTS.filter(p => 
-        p.name.toLowerCase().includes(q) || 
-        p.description.toLowerCase().includes(q)
-      );
+      const matchedPlaylists = [];
 
       setResults({
         songs: matchedSongs,
