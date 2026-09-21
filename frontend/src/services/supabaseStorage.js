@@ -156,4 +156,29 @@ export async function fetchSongsFromSupabase() {
   }
 }
 
+/**
+ * Delete a song from Supabase PostgreSQL database
+ * @param {number|string} songId
+ * @returns {Promise<boolean>}
+ */
+export async function deleteSongFromSupabase(songId) {
+  if (!supabase || !songId) return false;
+  try {
+    const { error } = await supabase
+      .from('songs')
+      .delete()
+      .eq('id', songId);
+
+    if (error) {
+      console.warn('[Supabase DB] Error deleting song:', error.message);
+      return false;
+    }
+    console.log('[Supabase DB] Song deleted successfully from Supabase:', songId);
+    return true;
+  } catch (err) {
+    console.warn('[Supabase DB] Exception deleting song:', err.message);
+    return false;
+  }
+}
+
 export { supabase };
