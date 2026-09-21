@@ -76,8 +76,9 @@ export default function MusicCard({ song, onAddToPlaylist = null }) {
     <div className="music-card" onClick={handleCardClick} role="button" tabIndex={0}>
       <div className="music-card-img-wrapper">
         <img 
-          src={song.coverUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80'} 
+          src={song.coverUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80'} 
           alt={song.title} 
+          onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80'; }}
           loading="lazy" 
         />
         <button 
