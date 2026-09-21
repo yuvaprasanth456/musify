@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { SAMPLE_SONGS } from '../utils/sampleData';
-import { fetchSongsFromSupabase } from '../services/supabaseStorage';
+import { fetchSongsFromSupabase, deleteSongFromSupabase, supabase } from '../services/supabaseStorage';
 import { useToast } from './ToastContext';
 import api from '../services/api';
 
@@ -10,6 +10,16 @@ export function PlayerProvider({ children }) {
   // Audio element reference
   const audioRef = useRef(new Audio());
   const { addToast } = useToast();
+
+  // Track explicitly deleted song IDs so they never reappear
+  const [deletedSongIds, setDeletedSongIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem('musify_deleted_song_ids');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Custom uploaded songs stored locally
   const [customSongs, setCustomSongs] = useState(() => {
@@ -21,11 +31,17 @@ export function PlayerProvider({ children }) {
     }
   });
 
-  // All combined songs (Supabase + custom uploads + default catalog)
+  // All combined songs
   const [songs, setSongs] = useState(() => {
-    const saved = localStorage.getItem('musify_custom_songs');
-    const custom = saved ? JSON.parse(saved) : [];
-    return [...custom, ...SAMPLE_SONGS];
+    try {
+      const deletedSet = new Set(JSON.parse(localStorage.getItem('musify_deleted_song_ids') || '[]'));
+      const saved = localStorage.getItem('musify_custom_songs');
+      const custom = (saved ? JSON.parse(saved) : []).filter(s => !deletedSet.has(s.id));
+      const sample = SAMPLE_SONGS.filter(s => !deletedSet.has(s.id));
+      return [...custom, ...sample];
+    } catch {
+      return SAMPLE_SONGS;
+    }
   });
 
   // Playback state
@@ -57,26 +73,119 @@ export function PlayerProvider({ children }) {
     return saved ? JSON.parse(saved) : [SAMPLE_SONGS[0], SAMPLE_SONGS[1], SAMPLE_SONGS[3]];
   });
 
-  // Fetch live songs from Supabase PostgreSQL on mount
-  useEffect(() => {
-    async function loadSupabase() {
-      try {
-        const sbSongs = await fetchSongsFromSupabase();
-        if (sbSongs && sbSongs.length > 0) {
-          console.log(`Loaded ${sbSongs.length} songs from Supabase database`);
-          setSongs(prev => {
-            const existingIds = new Set(sbSongs.map(s => s.id));
-            const filteredCustom = customSongs.filter(s => !existingIds.has(s.id));
-            const filteredSample = SAMPLE_SONGS.filter(s => !existingIds.has(s.id));
-            return [...filteredCustom, ...sbSongs, ...filteredSample];
-          });
-        }
-      } catch (err) {
-        console.warn('Could not load songs from Supabase:', err);
+  // Refresh songs from Supabase
+  const refreshSongs = useCallback(async () => {
+    try {
+      const deletedSet = new Set(JSON.parse(localStorage.getItem('musify_deleted_song_ids') || '[]'));
+      const sbSongs = await fetchSongsFromSupabase();
+      
+      if (sbSongs && sbSongs.length > 0) {
+        console.log(`[MUSIFY] Loaded ${sbSongs.length} songs from Supabase database`);
+        const validSbSongs = sbSongs.filter(s => !deletedSet.has(s.id));
+        const savedCustom = (JSON.parse(localStorage.getItem('musify_custom_songs') || '[]'))
+          .filter(s => !deletedSet.has(s.id) && !validSbSongs.some(sb => sb.id === s.id));
+        
+        const combined = [...savedCustom, ...validSbSongs];
+        setSongs(combined);
+        setQueue(combined);
+      } else {
+        const savedCustom = (JSON.parse(localStorage.getItem('musify_custom_songs') || '[]'))
+          .filter(s => !deletedSet.has(s.id));
+        const sample = SAMPLE_SONGS.filter(s => !deletedSet.has(s.id));
+        const combined = [...savedCustom, ...sample];
+        setSongs(combined);
+        setQueue(combined);
       }
+    } catch (err) {
+      console.warn('Could not refresh songs from Supabase:', err);
     }
-    loadSupabase();
-  }, [customSongs]);
+  }, []);
+
+  // Fetch live songs on mount
+  useEffect(() => {
+    refreshSongs();
+  }, [refreshSongs]);
+
+  // Realtime Supabase Subscription (Auto-sync INSERT, DELETE, UPDATE from Supabase in real-time)
+  useEffect(() => {
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel('musify_songs_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'songs' },
+        (payload) => {
+          console.log('[Supabase Realtime] Event on songs:', payload.eventType, payload);
+          if (payload.eventType === 'INSERT') {
+            const row = payload.new;
+            const mapped = {
+              id: row.id,
+              title: row.title,
+              artist: row.artist_name || 'Unknown Artist',
+              artistName: row.artist_name || 'Unknown Artist',
+              album: row.album_title || 'Single',
+              albumTitle: row.album_title || 'Single',
+              genre: row.genre || 'Tamil Hits',
+              language: row.language || 'Tamil',
+              coverUrl: row.cover_url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80',
+              audioUrl: row.audio_url,
+              duration: row.duration || 240,
+              releaseDate: row.release_date || new Date().toISOString().split('T')[0],
+              playCount: row.play_count || 0,
+              lyrics: row.lyrics || ''
+            };
+            setSongs(prev => {
+              if (prev.some(s => s.id === mapped.id)) return prev;
+              return [mapped, ...prev];
+            });
+            setQueue(prev => {
+              if (prev.some(s => s.id === mapped.id)) return prev;
+              return [mapped, ...prev];
+            });
+            addToast(`🎵 New song live: "${mapped.title}"`, 'info', 3000);
+          } else if (payload.eventType === 'DELETE') {
+            const deletedId = payload.old?.id;
+            if (deletedId) {
+              setSongs(prev => prev.filter(s => s.id !== deletedId));
+              setQueue(prev => prev.filter(s => s.id !== deletedId));
+              setCustomSongs(prev => {
+                const next = prev.filter(s => s.id !== deletedId);
+                localStorage.setItem('musify_custom_songs', JSON.stringify(next));
+                return next;
+              });
+              setDeletedSongIds(prev => {
+                const next = Array.from(new Set([...prev, deletedId]));
+                localStorage.setItem('musify_deleted_song_ids', JSON.stringify(next));
+                return next;
+              });
+              addToast(`🗑️ Song removed from Supabase (ID: ${deletedId})`, 'info', 3000);
+            } else {
+              refreshSongs();
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const row = payload.new;
+            setSongs(prev => prev.map(s => s.id === row.id ? {
+              ...s,
+              title: row.title,
+              artist: row.artist_name || s.artist,
+              artistName: row.artist_name || s.artistName,
+              album: row.album_title || s.album,
+              albumTitle: row.album_title || s.albumTitle,
+              genre: row.genre || s.genre,
+              coverUrl: row.cover_url || s.coverUrl,
+              audioUrl: row.audio_url || s.audioUrl,
+              lyrics: row.lyrics || s.lyrics
+            } : s));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refreshSongs, addToast]);
 
   // Method to add a newly uploaded song
   const addUploadedSong = useCallback((newSong) => {
@@ -91,9 +200,47 @@ export function PlayerProvider({ children }) {
       return [newSong, ...filtered];
     });
 
-    // Also place in queue so artist can preview immediately
     setQueue(prev => [newSong, ...prev]);
   }, []);
+
+  // Method to delete a song from frontend, Supabase, and backend
+  const deleteSong = useCallback(async (songId) => {
+    if (!songId) return;
+
+    // 1. Mark as deleted locally so it never resurrects
+    setDeletedSongIds(prev => {
+      const next = Array.from(new Set([...prev, songId]));
+      localStorage.setItem('musify_deleted_song_ids', JSON.stringify(next));
+      return next;
+    });
+
+    // 2. Remove from customSongs and localStorage
+    setCustomSongs(prev => {
+      const next = prev.filter(s => s.id !== songId);
+      localStorage.setItem('musify_custom_songs', JSON.stringify(next));
+      return next;
+    });
+
+    // 3. Remove from active songs and queue
+    setSongs(prev => prev.filter(s => s.id !== songId));
+    setQueue(prev => prev.filter(s => s.id !== songId));
+
+    // 4. Delete from Supabase PostgreSQL table
+    try {
+      await deleteSongFromSupabase(songId);
+    } catch (err) {
+      console.warn('Supabase deleteSong notice:', err);
+    }
+
+    // 5. Delete from Spring Boot backend if running
+    try {
+      await api.delete(`/artist/songs/${songId}`);
+    } catch (err) {
+      console.warn('Backend deleteSong notice:', err);
+    }
+
+    addToast('Song deleted from streaming catalog & Supabase', 'info');
+  }, [addToast]);
 
   // Keep volume updated on audio element
   useEffect(() => {
