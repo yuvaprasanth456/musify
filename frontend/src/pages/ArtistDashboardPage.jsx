@@ -26,15 +26,28 @@ import api from '../services/api';
 export default function ArtistDashboardPage() {
   const { user, isArtist } = useAuth();
   const { addToast } = useToast();
-  const { playSong, songs, addUploadedSong } = usePlayer();
+  const { playSong, songs, addUploadedSong, deleteSong } = usePlayer();
 
   const coverInputRef = useRef(null);
   const audioInputRef = useRef(null);
 
   // Find tracks belonging to this artist
   const [tracks, setTracks] = useState(() => {
-    return songs.filter(s => (s.artist || s.artistName || '').toLowerCase() === (user?.name || '').toLowerCase());
+    const artistNameLower = (user?.name || '').toLowerCase();
+    const artistTracks = songs.filter(s => (s.artist || s.artistName || '').toLowerCase() === artistNameLower);
+    return artistTracks.length > 0 ? artistTracks : songs.slice(0, 10);
   });
+
+  // Keep tracks reactive to songs in PlayerContext (Supabase Realtime inserts and deletes)
+  useEffect(() => {
+    const artistNameLower = (user?.name || '').toLowerCase();
+    const artistTracks = songs.filter(s => {
+      const matchArtist = (s.artist || s.artistName || '').toLowerCase() === artistNameLower;
+      const matchUploader = s.uploaderEmail && s.uploaderEmail === user?.email;
+      return matchArtist || matchUploader;
+    });
+    setTracks(artistTracks.length > 0 ? artistTracks : songs.slice(0, 10));
+  }, [songs, user]);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadStage, setUploadStage] = useState('');
@@ -201,10 +214,10 @@ export default function ArtistDashboardPage() {
     }
   };
 
-  const handleDeleteTrack = (trackId) => {
-    if (window.confirm('Are you sure you want to remove this track from streaming?')) {
+  const handleDeleteTrack = async (trackId) => {
+    if (window.confirm('Are you sure you want to delete this track from streaming and Supabase?')) {
       setTracks(prev => prev.filter(t => t.id !== trackId));
-      addToast('Track deleted', 'info');
+      await deleteSong(trackId);
     }
   };
 
