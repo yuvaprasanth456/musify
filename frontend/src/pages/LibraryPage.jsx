@@ -1,16 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Heart, Music, Play } from 'lucide-react';
-import { SAMPLE_PLAYLISTS, SAMPLE_ARTISTS } from '../utils/sampleData';
 import { usePlayer } from '../context/PlayerContext';
+import { supabase } from '../services/supabaseStorage';
 import CreatePlaylistModal from '../components/playlist/CreatePlaylistModal';
 
 export default function LibraryPage() {
   const navigate = useNavigate();
-  const { likedSongIds, playSong } = usePlayer();
+  const { likedSongIds, songs, playSong } = usePlayer();
   const [activeTab, setActiveTab] = useState('All');
-  const [playlists, setPlaylists] = useState(SAMPLE_PLAYLISTS);
+  const [playlists, setPlaylists] = useState([]);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  useEffect(() => {
+    async function loadPlaylists() {
+      if (!supabase) return;
+      try {
+        const { data, error } = await supabase.from('playlists').select('*').order('id', { ascending: false });
+        if (data && !error) {
+          setPlaylists(data);
+        }
+      } catch (err) {
+        console.warn('Load playlists notice:', err);
+      }
+    }
+    loadPlaylists();
+  }, []);
+
+  const artists = useMemo(() => {
+    const artistMap = new Map();
+    (songs || []).forEach(s => {
+      const name = s.artist || s.artistName;
+      if (name && !artistMap.has(name.toLowerCase())) {
+        artistMap.set(name.toLowerCase(), {
+          id: s.artistId || s.id,
+          name: name,
+          imageUrl: s.coverUrl
+        });
+      }
+    });
+    return Array.from(artistMap.values());
+  }, [songs]);
 
   const tabs = ['All', 'Playlists', 'Artists'];
 
