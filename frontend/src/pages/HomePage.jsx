@@ -29,7 +29,7 @@ export default function HomePage() {
     <div style={{ paddingBottom: '32px' }}>
       {/* Dynamic Hero Banner */}
       {heroSong ? (
-        <div 
+        <div
           style={{
             position: 'relative',
             borderRadius: 'var(--radius-xl)',
@@ -46,14 +46,14 @@ export default function HomePage() {
           }}
         >
           <div style={{ maxWidth: '580px', zIndex: 2 }}>
-            <div 
-              style={{ 
-                display: 'inline-flex', 
-                alignItems: 'center', 
-                gap: '6px', 
-                padding: '4px 12px', 
-                borderRadius: 'var(--radius-pill)', 
-                backgroundColor: 'rgba(29, 185, 84, 0.2)', 
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 12px',
+                borderRadius: 'var(--radius-pill)',
+                backgroundColor: 'rgba(29, 185, 84, 0.2)',
                 color: 'var(--accent-primary)',
                 fontSize: '12px',
                 fontWeight: 700,
@@ -71,7 +71,7 @@ export default function HomePage() {
             </p>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <button 
+              <button
                 onClick={() => playSong(heroSong, songs)}
                 className="btn-primary"
                 style={{ padding: '12px 30px', fontSize: '15px' }}
@@ -79,7 +79,7 @@ export default function HomePage() {
                 <Play size={18} fill="#000" />
                 <span>Play Now</span>
               </button>
-              <button 
+              <button
                 onClick={() => setSelectedSongForPlaylist(heroSong)}
                 className="btn-secondary"
               >
@@ -89,11 +89,11 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div 
-            style={{ 
-              width: '180px', 
-              height: '180px', 
-              borderRadius: 'var(--radius-lg)', 
+          <div
+            style={{
+              width: '180px',
+              height: '180px',
+              borderRadius: 'var(--radius-lg)',
               background: 'rgba(29, 185, 84, 0.1)',
               border: '1px solid rgba(29, 185, 84, 0.2)',
               display: 'flex',
@@ -104,11 +104,11 @@ export default function HomePage() {
             }}
           >
             {heroSong.coverUrl ? (
-              <img 
-                src={heroSong.coverUrl} 
-                alt={heroSong.title} 
+              <img
+                src={heroSong.coverUrl}
+                alt={heroSong.title}
                 onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80'; }}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
             ) : (
               <Music2 size={64} color="var(--accent-primary)" />
@@ -116,7 +116,7 @@ export default function HomePage() {
           </div>
         </div>
       ) : (
-        <div 
+        <div
           style={{
             position: 'relative',
             borderRadius: 'var(--radius-xl)',
@@ -138,8 +138,8 @@ export default function HomePage() {
             <p style={{ fontSize: '15px', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.6 }}>
               Upload your original music in the Artist Studio to start streaming worldwide.
             </p>
-            <Link 
-              to="/artist/dashboard" 
+            <Link
+              to="/artist/dashboard"
               className="btn-primary"
               style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
             >
@@ -152,96 +152,97 @@ export default function HomePage() {
 
       {/* 1. Recently Played */}
       {recentlyPlayed.length > 0 && (
-        <CategorySection 
-          title="Recently Played" 
+        <CategorySection
+          title="Recently Played"
           subtitle="Jump back in where you left off"
-          songs={recentlyPlayed} 
+          songs={recentlyPlayed}
           onAddToPlaylist={(song) => setSelectedSongForPlaylist(song)}
         />
       )}
 
       {/* Dynamic Sections from Database */}
       {tamilLove.length > 0 && (
-        <CategorySection 
-          title="Tamil Love" 
+        <CategorySection
+          title="Tamil Love"
           subtitle="Heartfelt romance and acoustic melodies"
-          songs={tamilLove} 
+          songs={tamilLove}
           onAddToPlaylist={(song) => setSelectedSongForPlaylist(song)}
         />
       )}
 
       {tamilHits.length > 0 && (
-        <CategorySection 
-          title="Tamil Hits" 
+        <CategorySection
+          title="Tamil Hits"
           subtitle="Latest releases"
-          songs={tamilHits} 
+          songs={tamilHits}
           onAddToPlaylist={(song) => setSelectedSongForPlaylist(song)}
         />
       )}
 
       {tamilTrending.length > 0 && (
-        <CategorySection 
-          title="Tamil Trending" 
+        <CategorySection
+          title="Tamil Trending"
           subtitle="Trending now on MUSIFY"
-          songs={tamilTrending} 
+          songs={tamilTrending}
           onAddToPlaylist={(song) => setSelectedSongForPlaylist(song)}
         />
       )}
 
       {tamilMelody.length > 0 && (
-        <CategorySection 
-          title="Tamil Melody" 
+        <CategorySection
+          title="Tamil Melody"
           subtitle="Melodious releases"
-          songs={tamilMelody} 
+          songs={tamilMelody}
           onAddToPlaylist={(song) => setSelectedSongForPlaylist(song)}
         />
       )}
 
       {tamilChill.length > 0 && (
-        <CategorySection 
-          title="Tamil Chill" 
+        <CategorySection
+          title="Tamil Chill"
           subtitle="Chill vibes"
-          songs={tamilChill} 
+          songs={tamilChill}
           onAddToPlaylist={(song) => setSelectedSongForPlaylist(song)}
         />
       )}
 
       {tamilParty.length > 0 && (
-        <CategorySection 
-          title="Tamil Party" 
+        <CategorySection
+          title="Tamil Party"
           subtitle="Party vibes"
-          songs={tamilParty} 
+          songs={tamilParty}
           onAddToPlaylist={(song) => setSelectedSongForPlaylist(song)}
         />
       )}
 
       {tamilIndie.length > 0 && (
-        <CategorySection 
-          title="Tamil Indie" 
+        <CategorySection
+          title="Tamil Indie"
           subtitle="Independent releases"
-          songs={tamilIndie} 
+          songs={tamilIndie}
           onAddToPlaylist={(song) => setSelectedSongForPlaylist(song)}
         />
       )}
 
       {/* Fallback to all database songs if no category matches */}
-      {songs.length > 0 && 
-       tamilLove.length === 0 && 
-       tamilHits.length === 0 && 
-       tamilTrending.length === 0 && (
-        <CategorySection 
-          title="All Uploaded Songs" 
-          subtitle="Stream music on MUSIFY"
-          songs={songs} 
-          onAddToPlaylist={(song) => setSelectedSongForPlaylist(song)}
-        />
-      )}
+      {songs.length > 0 &&
+        tamilLove.length === 0 &&
+        tamilHits.length === 0 &&
+        tamilTrending.length === 0 && (
+          <CategorySection
+            title="All Uploaded Songs"
+            subtitle="Stream music on MUSIFY"
+            songs={songs}
+            onAddToPlaylist={(song) => setSelectedSongForPlaylist(song)}
+          />
+        )}
 
-      <AddToPlaylistModal 
-        isOpen={!!selectedSongForPlaylist} 
-        onClose={() => setSelectedSongForPlaylist(null)} 
-        song={selectedSongForPlaylist} 
+      <AddToPlaylistModal
+        isOpen={!!selectedSongForPlaylist}
+        onClose={() => setSelectedSongForPlaylist(null)}
+        song={selectedSongForPlaylist}
       />
     </div>
+
   );
 }
