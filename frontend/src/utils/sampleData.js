@@ -34,3 +34,5 @@ export const BROWSE_CATEGORIES = [
   { id: 'tamil-folk', name: 'Tamil Folk', color: 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)' },
   { id: 'tamil-devotional', name: 'Tamil Devotional', color: 'linear-gradient(135deg, #eab308 0%, #a16207 100%)' }
 ];
+
+export const CATEGORIES = BROWSE_CATEGORIES;
