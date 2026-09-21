@@ -102,8 +102,24 @@ CREATE TABLE IF NOT EXISTS followed_artists (
     UNIQUE(user_id, artist_id)
 );
 
+-- 10. COVERS TABLE
+CREATE TABLE IF NOT EXISTS covers (
+    id BIGSERIAL PRIMARY KEY,
+    song_id BIGINT REFERENCES songs(id) ON DELETE CASCADE,
+    title VARCHAR(255),
+    artist_name VARCHAR(255),
+    cover_url VARCHAR(1000) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- INDEXES FOR HIGH-PERFORMANCE STREAMING QUERIES
 CREATE INDEX IF NOT EXISTS idx_songs_genre ON songs(genre);
 CREATE INDEX IF NOT EXISTS idx_songs_play_count ON songs(play_count DESC);
 CREATE INDEX IF NOT EXISTS idx_liked_songs_user ON liked_songs(user_id);
 CREATE INDEX IF NOT EXISTS idx_recently_played_user ON recently_played(user_id, played_at DESC);
+CREATE INDEX IF NOT EXISTS idx_covers_song_id ON covers(song_id);
+
+-- ROW LEVEL SECURITY POLICIES FOR SUPABASE
+ALTER TABLE IF EXISTS covers ENABLE ROW LEVEL SECURITY;
+CREATE POLICY IF NOT EXISTS "Allow public all on covers" ON covers FOR ALL TO public USING (true) WITH CHECK (true);
+

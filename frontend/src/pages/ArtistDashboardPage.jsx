@@ -18,7 +18,8 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { usePlayer } from '../context/PlayerContext';
-import { uploadToStorage, saveSongToSupabase } from '../services/supabaseStorage';
+import { uploadToStorage, saveSongToSupabase, saveCoverToTable } from '../services/supabaseStorage';
+import { saveAudioToIndexedDB, saveCoverToIndexedDB } from '../services/indexedDBStorage';
 import { formatNumber, formatDate } from '../utils/formatters';
 import Modal from '../components/common/Modal';
 import api from '../services/api';
@@ -185,7 +186,27 @@ export default function ArtistDashboardPage() {
         console.warn('Backend sync notice (offline or local fallback):', err.message);
       }
 
-      // 5. Add to live player context & local cache
+      // 5. Store media permanently in browser IndexedDB (guarantees playback across reloads/sessions)
+      if (audioFile) {
+        await saveAudioToIndexedDB(`audio_${newSong.id}`, audioFile);
+        await saveAudioToIndexedDB(`audio_${newSong.title}`, audioFile);
+      }
+      if (coverFile) {
+        await saveCoverToIndexedDB(`cover_${newSong.id}`, coverFile);
+        await saveCoverToIndexedDB(`cover_${newSong.title}`, coverFile);
+      }
+
+      // 6. Save cover to covers table
+      if (finalCoverUrl) {
+        await saveCoverToTable({
+          song_id: newSong.id,
+          title: newSong.title,
+          artist_name: newSong.artistName,
+          cover_url: finalCoverUrl
+        });
+      }
+
+      // 7. Add to live player context & local cache
       addUploadedSong(newSong);
       setTracks(prev => [newSong, ...prev]);
 

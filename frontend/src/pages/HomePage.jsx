@@ -10,20 +10,21 @@ export default function HomePage() {
   const [selectedSongForPlaylist, setSelectedSongForPlaylist] = useState(null);
 
   // Group songs dynamically from database
-  const trendingSongs = songs.filter(s => (s.playCount || 0) > 2000000 || s.playCount === 1);
-  const tamilHits = songs.filter(s => s.genre === 'Tamil Hits');
-  const tamilTrending = songs.filter(s => s.genre === 'Tamil Trending');
-  const tamilMelody = songs.filter(s => s.genre === 'Tamil Melody');
-  const tamilLove = songs.filter(s => s.genre === 'Tamil Love');
-  const tamilChill = songs.filter(s => s.genre === 'Tamil Chill');
-  const tamilParty = songs.filter(s => s.genre === 'Tamil Party');
-  const tamilIndie = songs.filter(s => s.genre === 'Tamil Indie');
-  const tamilClassical = songs.filter(s => s.genre === 'Tamil Classical');
-  const tamilFolk = songs.filter(s => s.genre === 'Tamil Folk');
-  const tamilDevotional = songs.filter(s => s.genre === 'Tamil Devotional');
+  const songList = Array.isArray(songs) ? songs : [];
+  const trendingSongs = songList.filter(s => s && ((s.playCount || 0) > 2000000 || s.playCount === 1));
+  const tamilHits = songList.filter(s => s && s.genre === 'Tamil Hits');
+  const tamilTrending = songList.filter(s => s && s.genre === 'Tamil Trending');
+  const tamilMelody = songList.filter(s => s && s.genre === 'Tamil Melody');
+  const tamilLove = songList.filter(s => s && s.genre === 'Tamil Love');
+  const tamilChill = songList.filter(s => s && s.genre === 'Tamil Chill');
+  const tamilParty = songList.filter(s => s && s.genre === 'Tamil Party');
+  const tamilIndie = songList.filter(s => s && s.genre === 'Tamil Indie');
+  const tamilClassical = songList.filter(s => s && s.genre === 'Tamil Classical');
+  const tamilFolk = songList.filter(s => s && s.genre === 'Tamil Folk');
+  const tamilDevotional = songList.filter(s => s && s.genre === 'Tamil Devotional');
 
   // Hero Featured Track (if any song exists)
-  const heroSong = songs[0] || null;
+  const heroSong = songList.length > 0 ? songList[0] : null;
 
   return (
     <div style={{ paddingBottom: '32px' }}>

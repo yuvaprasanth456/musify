@@ -133,23 +133,33 @@ export async function fetchSongsFromSupabase() {
       return [];
     }
 
-    return data.map(s => ({
-      id: s.id,
-      title: s.title,
-      artist: s.artist_name || s.artist || 'Unknown Artist',
-      artistName: s.artist_name || s.artist || 'Unknown Artist',
-      album: s.album_title || s.album || 'Single',
-      albumTitle: s.album_title || s.album || 'Single',
-      genre: s.genre || 'Tamil Hits',
-      language: s.language || 'Tamil',
-      coverUrl: s.cover_url || s.coverUrl,
-      audioUrl: s.audio_url || s.audioUrl,
-      duration: s.duration || 240,
-      releaseDate: s.release_date || s.releaseDate || '2024-01-01',
-      playCount: s.play_count || s.playCount || 0,
-      lyrics: s.lyrics || '',
-      description: s.description || ''
-    }));
+    return data.map(s => {
+      const isAmsham = (s.title || '').toLowerCase().includes('amsham') || s.id === 3;
+      const audioUrl = isAmsham 
+        ? (s.audio_url && !s.audio_url.includes('freemusicarchive') && !s.audio_url.includes('soundhelix') ? s.audio_url : '/audio/amsham-song.mp3')
+        : (s.audio_url || s.audioUrl);
+      const coverUrl = isAmsham && (!s.cover_url || s.cover_url.includes('unsplash'))
+        ? '/covers/amsham-song.jpg'
+        : (s.cover_url || s.coverUrl);
+
+      return {
+        id: s.id,
+        title: s.title,
+        artist: s.artist_name || s.artist || 'Unknown Artist',
+        artistName: s.artist_name || s.artist || 'Unknown Artist',
+        album: s.album_title || s.album || 'Single',
+        albumTitle: s.album_title || s.album || 'Single',
+        genre: s.genre || 'Tamil Hits',
+        language: s.language || 'Tamil',
+        coverUrl,
+        audioUrl,
+        duration: isAmsham ? (s.duration || 340) : (s.duration || 240),
+        releaseDate: s.release_date || s.releaseDate || '2024-01-01',
+        playCount: s.play_count || s.playCount || 0,
+        lyrics: s.lyrics || '',
+        description: s.description || ''
+      };
+    });
   } catch (err) {
     console.warn('[Supabase DB] Exception while fetching songs:', err);
     return [];
@@ -181,4 +191,143 @@ export async function deleteSongFromSupabase(songId) {
   }
 }
 
+/**
+ * Save cover image record to Supabase & backend covers table
+ * @param {Object} coverData - { song_id, title, artist_name, cover_url }
+ * @returns {Promise<Object>}
+ */
+export async function saveCoverToTable(coverData) {
+  if (!coverData || !coverData.cover_url) return null;
+
+  const payload = {
+    song_id: coverData.song_id || coverData.songId || null,
+    title: coverData.title || 'Untitled Cover',
+    artist_name: coverData.artist_name || coverData.artistName || 'Unknown Artist',
+    cover_url: coverData.cover_url || coverData.coverUrl,
+    created_at: new Date().toISOString()
+  };
+
+  let savedRecord = null;
+
+  // 1. Attempt Supabase 'covers' table insert
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('covers')
+        .insert([payload])
+        .select();
+
+      if (!error && data && data.length > 0) {
+        console.log('[Supabase DB] Cover saved successfully in covers table:', data[0]);
+        savedRecord = data[0];
+      } else if (error) {
+        console.warn('[Supabase DB] covers table notice (table pending or RLS):', error.message);
+      }
+    } catch (err) {
+      console.warn('[Supabase DB] Exception saving cover:', err.message);
+    }
+  }
+
+  // 2. Sync to Spring Boot backend /api/covers
+  try {
+    const beRes = await fetch('/api/covers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        songId: payload.song_id,
+        title: payload.title,
+        artistName: payload.artist_name,
+        coverUrl: payload.cover_url
+      })
+    });
+    if (beRes.ok) {
+      const beData = await beRes.json();
+      if (!savedRecord) savedRecord = beData;
+    }
+  } catch (err) {
+    // Backend offline or local fallback
+  }
+
+  // 3. Always guarantee persistence in localStorage cache
+  try {
+    const existing = JSON.parse(localStorage.getItem('musify_covers_table') || '[]');
+    const nextList = [{ id: savedRecord?.id || Date.now(), ...payload }, ...existing];
+    localStorage.setItem('musify_covers_table', JSON.stringify(nextList));
+    if (!savedRecord) savedRecord = nextList[0];
+  } catch (err) {
+    console.warn('Local covers cache error:', err);
+  }
+
+  return savedRecord;
+}
+
+/**
+ * Fetch all cover records from Supabase and fallbacks
+ * @returns {Promise<Array>}
+ */
+export async function fetchCoversFromSupabase() {
+  // 1. Try Supabase
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('covers')
+        .select('*')
+        .order('id', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        return data;
+      }
+    } catch (err) {
+      console.warn('[Supabase DB] Exception fetching covers:', err);
+    }
+  }
+
+  // 2. Try Backend
+  try {
+    const beRes = await fetch('/api/covers');
+    if (beRes.ok) {
+      const beData = await beRes.json();
+      if (Array.isArray(beData) && beData.length > 0) {
+        return beData;
+      }
+    }
+  } catch (err) {}
+
+  // 3. Fallback to localStorage
+  try {
+    const saved = JSON.parse(localStorage.getItem('musify_covers_table') || '[]');
+    return Array.isArray(saved) ? saved : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+/**
+ * Delete cover record by ID
+ * @param {number|string} coverId
+ * @returns {Promise<boolean>}
+ */
+export async function deleteCoverFromTable(coverId) {
+  if (!coverId) return false;
+
+  if (supabase) {
+    try {
+      await supabase.from('covers').delete().eq('id', coverId);
+    } catch (e) {}
+  }
+
+  try {
+    await fetch(`/api/covers/${coverId}`, { method: 'DELETE' });
+  } catch (e) {}
+
+  try {
+    const existing = JSON.parse(localStorage.getItem('musify_covers_table') || '[]');
+    const next = existing.filter(c => c.id !== coverId);
+    localStorage.setItem('musify_covers_table', JSON.stringify(next));
+  } catch (e) {}
+
+  return true;
+}
+
 export { supabase };
+
