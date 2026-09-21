@@ -13,14 +13,29 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { SAMPLE_PLAYLISTS } from '../../utils/sampleData';
+import { supabase } from '../../services/supabaseStorage';
 import CreatePlaylistModal from '../playlist/CreatePlaylistModal';
 
 export default function Sidebar() {
   const { user, isArtist } = useAuth();
   const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [playlists, setPlaylists] = useState(SAMPLE_PLAYLISTS);
+  const [playlists, setPlaylists] = useState([]);
+
+  useEffect(() => {
+    async function loadPlaylists() {
+      if (!supabase) return;
+      try {
+        const { data, error } = await supabase.from('playlists').select('*').order('id', { ascending: false });
+        if (data && !error) {
+          setPlaylists(data);
+        }
+      } catch (err) {
+        console.warn('Load playlists notice:', err);
+      }
+    }
+    loadPlaylists();
+  }, []);
 
   const handlePlaylistCreated = (newPlaylist) => {
     setPlaylists(prev => [newPlaylist, ...prev]);
