@@ -84,8 +84,9 @@ export default function QueueDrawer() {
               }}
             >
               <img 
-                src={currentSong.coverUrl} 
+                src={currentSong.coverUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=100&auto=format&fit=crop&q=80'} 
                 alt={currentSong.title} 
+                onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=100&auto=format&fit=crop&q=80'; }}
                 style={{ width: '48px', height: '48px', borderRadius: '4px', objectFit: 'cover' }} 
               />
               <div style={{ minWidth: 0, flex: 1 }}>
