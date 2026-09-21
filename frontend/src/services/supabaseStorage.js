@@ -57,27 +57,13 @@ export async function uploadToStorage(file, bucket = 'covers') {
     }
   }
 
-  // 2. High-performance fallback: Read file as Data URL (base64) so it can play immediately in HTML5 audio without needing external network
-  return new Promise((resolve) => {
-    try {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        resolve(e.target.result);
-      };
-      reader.onerror = () => {
-        // Fallback to Object URL if file reader has issues
-        try {
-          const objectUrl = URL.createObjectURL(file);
-          resolve(objectUrl);
-        } catch {
-          resolve('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
-        }
-      };
-      reader.readAsDataURL(file);
-    } catch {
-      resolve(URL.createObjectURL(file));
-    }
-  });
+  // 2. High-performance fallback: Create instant Object URL (0ms, 0 memory freeze)
+  try {
+    return URL.createObjectURL(file);
+  } catch (err) {
+    console.warn('ObjectURL generation notice:', err);
+    return 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+  }
 }
 
 /**
@@ -100,9 +86,7 @@ export async function saveSongToSupabase(songData) {
       duration: songData.duration || 240,
       release_date: songData.releaseDate || new Date().toISOString().split('T')[0],
       play_count: songData.playCount || 0,
-      lyrics: songData.lyrics || '',
-      description: songData.description || '',
-      uploader_email: songData.uploaderEmail || ''
+      lyrics: songData.lyrics || ''
     };
 
     const { data, error } = await supabase
