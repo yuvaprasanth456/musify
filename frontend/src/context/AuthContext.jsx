@@ -8,7 +8,18 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('musify_user');
-    return saved ? JSON.parse(saved) : null;
+    if (!saved) return null;
+    try {
+      const parsed = JSON.parse(saved);
+      if (parsed?.email === 'user@musify.io' || parsed?.email === 'anirudh@musify.io') {
+        localStorage.removeItem('musify_user');
+        localStorage.removeItem('musify_token');
+        return null;
+      }
+      return parsed;
+    } catch {
+      return null;
+    }
   });
   const [token, setToken] = useState(() => localStorage.getItem('musify_token') || null);
   const [loading, setLoading] = useState(false);
@@ -80,7 +91,7 @@ export function AuthProvider({ children }) {
     let authenticatedUser = null;
     let authToken = null;
 
-    // 1. Attempt Supabase Auth login
+    // 1. Try Supabase Auth SignIn first
     if (supabase) {
       try {
         const { data: sbData, error: sbErr } = await supabase.auth.signInWithPassword({
@@ -94,7 +105,7 @@ export function AuthProvider({ children }) {
             id: sbData.user.id,
             name: meta.name || email.split('@')[0],
             email: sbData.user.email,
-            role: meta.role || (email.includes('artist') || email === 'anirudh@musify.io' ? 'ARTIST' : 'USER'),
+            role: meta.role || 'USER',
             profileImage: meta.profile_image || meta.profileImage || 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=500&auto=format&fit=crop&q=80'
           };
           authToken = sbData.session?.access_token || ('sb_token_' + Date.now());
@@ -115,29 +126,6 @@ export function AuthProvider({ children }) {
       if (userData) authenticatedUser = userData;
     } catch (backendErr) {
       console.warn('Backend login notice:', backendErr.message);
-    }
-
-    // 3. Demo fallback if demo accounts used
-    if (!authenticatedUser) {
-      if (email.includes('artist') || email === 'anirudh@musify.io') {
-        authenticatedUser = {
-          id: 102,
-          name: 'Anirudh Ravichander',
-          email,
-          role: 'ARTIST',
-          profileImage: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=500&auto=format&fit=crop&q=80'
-        };
-        authToken = 'mock_jwt_token_artist_' + Date.now();
-      } else if (email === 'user@musify.io' || email.includes('listener')) {
-        authenticatedUser = {
-          id: 1,
-          name: 'Priya Sharma',
-          email,
-          role: 'USER',
-          profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'
-        };
-        authToken = 'mock_jwt_token_user_' + Date.now();
-      }
     }
 
     setLoading(false);
@@ -275,13 +263,7 @@ export function AuthProvider({ children }) {
     addToast('Logged out successfully', 'info');
   };
 
-  const quickLogin = (role = 'USER') => {
-    if (role === 'ARTIST') {
-      login('anirudh@musify.io', 'password123');
-    } else {
-      login('user@musify.io', 'password123');
-    }
-  };
+  const quickLogin = () => {};
 
   return (
     <AuthContext.Provider

@@ -18,23 +18,22 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { usePlayer } from '../context/PlayerContext';
-import { SAMPLE_SONGS } from '../utils/sampleData';
 import { uploadToStorage, saveSongToSupabase } from '../services/supabaseStorage';
 import { formatNumber, formatDate } from '../utils/formatters';
 import Modal from '../components/common/Modal';
 import api from '../services/api';
 
 export default function ArtistDashboardPage() {
-  const { user, isArtist, quickLogin } = useAuth();
+  const { user, isArtist } = useAuth();
   const { addToast } = useToast();
   const { playSong, songs, addUploadedSong } = usePlayer();
 
   const coverInputRef = useRef(null);
   const audioInputRef = useRef(null);
 
-  // Find tracks belonging to this artist or initial studio set
+  // Find tracks belonging to this artist
   const [tracks, setTracks] = useState(() => {
-    return songs.slice(0, 8);
+    return songs.filter(s => (s.artist || s.artistName || '').toLowerCase() === (user?.name || '').toLowerCase());
   });
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -42,7 +41,7 @@ export default function ArtistDashboardPage() {
 
   // Upload Form State
   const [title, setTitle] = useState('');
-  const [artistName, setArtistName] = useState(user?.name || 'Anirudh Ravichander');
+  const [artistName, setArtistName] = useState(user?.name || '');
   const [album, setAlbum] = useState('');
   const [genre, setGenre] = useState('Tamil Hits');
   const [language, setLanguage] = useState('Tamil');
@@ -240,15 +239,6 @@ export default function ArtistDashboardPage() {
         </div>
 
         <div style={{ display: 'flex', gap: '12px' }}>
-          {!isArtist && (
-            <button 
-              onClick={() => quickLogin('ARTIST')}
-              className="btn-secondary"
-            >
-              Demo as Artist
-            </button>
-          )}
-
           <button 
             onClick={() => setIsUploadOpen(true)}
             className="btn-primary"

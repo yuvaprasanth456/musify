@@ -16,7 +16,7 @@ import { getGreeting } from '../../utils/formatters';
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthenticated, logout, quickLogin } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -211,13 +211,6 @@ export default function Header() {
           </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button 
-              onClick={() => quickLogin('USER')}
-              className="btn-secondary"
-              style={{ padding: '6px 14px', fontSize: '13px' }}
-            >
-              Demo User
-            </button>
             <button 
               onClick={() => navigate('/login')}
               className="btn-primary"

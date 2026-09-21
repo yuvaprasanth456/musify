@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search as SearchIcon, X, Play, Music, User, Disc, Radio } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
-import { SAMPLE_SONGS, SAMPLE_ARTISTS, SAMPLE_PLAYLISTS, CATEGORIES } from '../utils/sampleData';
+import { SAMPLE_ARTISTS, SAMPLE_PLAYLISTS, CATEGORIES } from '../utils/sampleData';
 import SongRow from '../components/cards/SongRow';
 import AddToPlaylistModal from '../components/playlist/AddToPlaylistModal';
 import api from '../services/api';
@@ -42,7 +42,7 @@ export default function SearchPage() {
       }
 
       // Filter catalog
-      const matchedSongs = (songs || SAMPLE_SONGS).filter(s => 
+      const matchedSongs = (songs || []).filter(s => 
         (s.title || '').toLowerCase().includes(q) || 
         (s.artist || s.artistName || '').toLowerCase().includes(q) || 
         (s.genre || '').toLowerCase().includes(q) ||

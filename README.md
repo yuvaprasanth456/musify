@@ -62,7 +62,7 @@
 ### 🔐 7. Authentication & Security
 - Stateless JWT-based authentication.
 - User registration with role selection (**Music Listener** vs. **Artist/Creator**) and avatar selection.
-- One-click **Demo Listener** and **Demo Artist** logins for immediate evaluation.
+- Secure password hashing and session tokens.
 
 ---
 

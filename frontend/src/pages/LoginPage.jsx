@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, Music2, LogIn, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, Music2, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login, quickLogin, loading } = useAuth();
+  const { login, loading } = useAuth();
   const { addToast } = useToast();
 
-  const [email, setEmail] = useState('user@musify.io');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -27,11 +27,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    addToast('Signing in via Google Auth...', 'info', 2000);
-    setTimeout(() => {
-      quickLogin('USER');
-      navigate('/');
-    }, 800);
+    addToast('Google Auth requires OAuth credentials to be configured in Supabase.', 'info', 3000);
   };
 
   const handleForgotPassword = () => {
@@ -80,50 +76,6 @@ export default function LoginPage() {
           <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
             Stream millions of tracks and original podcasts.
           </p>
-        </div>
-
-        {/* Quick Demo Logins for Instant Testing */}
-        <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          <button 
-            type="button"
-            onClick={() => { quickLogin('USER'); navigate('/'); }}
-            style={{
-              padding: '10px',
-              borderRadius: 'var(--radius-md)',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid var(--border-subtle)',
-              fontSize: '12.5px',
-              fontWeight: 600,
-              color: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px'
-            }}
-          >
-            <span>Listener Demo</span>
-          </button>
-
-          <button 
-            type="button"
-            onClick={() => { quickLogin('ARTIST'); navigate('/artist/dashboard'); }}
-            style={{
-              padding: '10px',
-              borderRadius: 'var(--radius-md)',
-              backgroundColor: 'rgba(29, 185, 84, 0.15)',
-              border: '1px solid var(--accent-subtle-border)',
-              fontSize: '12.5px',
-              fontWeight: 600,
-              color: 'var(--accent-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px'
-            }}
-          >
-            <Sparkles size={14} />
-            <span>Artist Demo</span>
-          </button>
         </div>
 
         {/* Google Login Button */}

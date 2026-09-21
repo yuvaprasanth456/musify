@@ -72,6 +72,6 @@ public class SongController {
             String token = authHeader.substring(7);
             return tokenProvider.getUserIdFromToken(token);
         }
-        return 1L; // Fallback demo user
+        return null;
     }
 }

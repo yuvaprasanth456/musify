@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { CheckCircle2, Play, UserCheck, UserPlus } from 'lucide-react';
-import { SAMPLE_ARTISTS, SAMPLE_SONGS } from '../utils/sampleData';
+import { SAMPLE_ARTISTS } from '../utils/sampleData';
 import { usePlayer } from '../context/PlayerContext';
 import { useToast } from '../context/ToastContext';
 import { formatNumber } from '../utils/formatters';
@@ -16,9 +16,9 @@ export default function ArtistDetailPage() {
   const artistId = parseInt(id, 10);
   const artist = SAMPLE_ARTISTS.find(a => a.id === artistId) || SAMPLE_ARTISTS[0];
 
-  const allSongs = songs || SAMPLE_SONGS;
+  const allSongs = songs || [];
   const artistSongs = allSongs.filter(s => (s.artist || s.artistName || '').toLowerCase().includes(artist.name.toLowerCase().split(' ')[0]));
-  const popularSongs = artistSongs.length > 0 ? artistSongs : allSongs.slice(0, 5);
+  const popularSongs = artistSongs;
 
   const handleFollowToggle = () => {
     setIsFollowing(prev => {

@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
-import { SAMPLE_SONGS } from '../utils/sampleData';
 import { fetchSongsFromSupabase, deleteSongFromSupabase, supabase } from '../services/supabaseStorage';
 import { useToast } from './ToastContext';
 import api from '../services/api';
@@ -36,19 +35,17 @@ export function PlayerProvider({ children }) {
     try {
       const deletedSet = new Set(JSON.parse(localStorage.getItem('musify_deleted_song_ids') || '[]'));
       const saved = localStorage.getItem('musify_custom_songs');
-      const custom = (saved ? JSON.parse(saved) : []).filter(s => !deletedSet.has(s.id));
-      const sample = SAMPLE_SONGS.filter(s => !deletedSet.has(s.id));
-      return [...custom, ...sample];
+      return (saved ? JSON.parse(saved) : []).filter(s => !deletedSet.has(s.id));
     } catch {
-      return SAMPLE_SONGS;
+      return [];
     }
   });
 
   // Playback state
-  const [currentSong, setCurrentSong] = useState(() => songs[0] || SAMPLE_SONGS[0]);
+  const [currentSong, setCurrentSong] = useState(() => songs[0] || null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(SAMPLE_SONGS[0]?.duration || 0);
+  const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(() => {
     const saved = localStorage.getItem('musify_volume');
     return saved !== null ? parseFloat(saved) : 0.8;
@@ -66,11 +63,11 @@ export function PlayerProvider({ children }) {
   // User Library in-memory & local storage sync
   const [likedSongIds, setLikedSongIds] = useState(() => {
     const saved = localStorage.getItem('musify_liked_songs');
-    return saved ? JSON.parse(saved) : [1, 4, 8];
+    return saved ? JSON.parse(saved).filter(id => id > 16) : [];
   });
   const [recentlyPlayed, setRecentlyPlayed] = useState(() => {
     const saved = localStorage.getItem('musify_recent_songs');
-    return saved ? JSON.parse(saved) : [SAMPLE_SONGS[0], SAMPLE_SONGS[1], SAMPLE_SONGS[3]];
+    return saved ? JSON.parse(saved).filter(s => s && s.id > 16) : [];
   });
 
   // Refresh songs from Supabase
@@ -91,10 +88,8 @@ export function PlayerProvider({ children }) {
       } else {
         const savedCustom = (JSON.parse(localStorage.getItem('musify_custom_songs') || '[]'))
           .filter(s => !deletedSet.has(s.id));
-        const sample = SAMPLE_SONGS.filter(s => !deletedSet.has(s.id));
-        const combined = [...savedCustom, ...sample];
-        setSongs(combined);
-        setQueue(combined);
+        setSongs(savedCustom);
+        setQueue(savedCustom);
       }
     } catch (err) {
       console.warn('Could not refresh songs from Supabase:', err);

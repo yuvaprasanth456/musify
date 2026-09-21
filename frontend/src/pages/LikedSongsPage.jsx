@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Heart, Play, Shuffle } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { useAuth } from '../context/AuthContext';
-import { SAMPLE_SONGS } from '../utils/sampleData';
 import SongRow from '../components/cards/SongRow';
 import AddToPlaylistModal from '../components/playlist/AddToPlaylistModal';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +12,7 @@ export default function LikedSongsPage() {
   const navigate = useNavigate();
   const [selectedSongForPlaylist, setSelectedSongForPlaylist] = useState(null);
 
-  const likedSongs = (songs || SAMPLE_SONGS).filter(s => (likedSongIds || []).includes(s.id));
+  const likedSongs = (songs || []).filter(s => (likedSongIds || []).includes(s.id));
 
   const handlePlayAll = () => {
     if (likedSongs.length > 0) {

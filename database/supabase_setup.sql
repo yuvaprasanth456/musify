@@ -104,11 +104,3 @@ CREATE POLICY "Public Storage Insert" ON storage.objects FOR INSERT WITH CHECK (
 CREATE POLICY "Public Storage Update" ON storage.objects FOR UPDATE USING (true);
 CREATE POLICY "Public Storage Delete" ON storage.objects FOR DELETE USING (true);
 
--- 9. INITIAL SONGS SEED
-INSERT INTO public.songs (title, artist_name, album_title, genre, language, cover_url, audio_url, duration, release_date, play_count, lyrics)
-VALUES 
-('Aalaporaan Tamizhan (Acoustic Vibes)', 'A.R. Rahman Ensemble', 'Mersal Reverie', 'Tamil Hits', 'Tamil', 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', 372, '2023-11-10', 1450200, '[00:12.00] Aalaporaan Tamizhan ulagame viyakkavae'),
-('Arabic Kuthu - Midnight Chill Mix', 'Anirudh Ravichander', 'Beast Grooves', 'Tamil Hits', 'Tamil', 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', 423, '2023-12-05', 2310450, '[00:15.00] Halamithi habibo habibo'),
-('Naa Ready (Acoustic Rhythm)', 'Anirudh Ravichander', 'Leo Unplugged', 'Tamil Trending', 'Tamil', 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', 345, '2024-01-15', 3105000, '[00:10.00] Naa ready dhaan varavaa'),
-('Munbe Vaa En Anbe Vaa (Lo-Fi Symphony)', 'Shreya Ghoshal', 'Single', 'Tamil Melody', 'Tamil', 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&auto=format&fit=crop&q=80', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3', 380, '2022-08-20', 4201000, '[00:14.00] Munbe vaa en anbe vaa'),
-('Nenjukkul Peidhidum (Gentle Rain)', 'Harris Jayaraj', 'Single', 'Tamil Melody', 'Tamil', 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=500&auto=format&fit=crop&q=80', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3', 360, '2023-04-12', 1980000, '[00:10.00] Nenjukkul peidhidum maa mazhai');

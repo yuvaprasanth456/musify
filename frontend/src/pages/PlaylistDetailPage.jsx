@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Play, Shuffle, Edit3, Trash2, Music } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { useToast } from '../context/ToastContext';
-import { SAMPLE_PLAYLISTS, SAMPLE_SONGS } from '../utils/sampleData';
+import { SAMPLE_PLAYLISTS } from '../utils/sampleData';
 import SongRow from '../components/cards/SongRow';
 import Modal from '../components/common/Modal';
 
@@ -19,18 +19,12 @@ export default function PlaylistDetailPage() {
     name: 'Custom Playlist',
     description: 'Personal music collection',
     coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&auto=format&fit=crop&q=80',
-    songCount: 4,
+    songCount: 0,
     createdBy: 'You'
   };
 
   const [playlist, setPlaylist] = useState(initialPlaylist);
-  const [songs, setSongs] = useState(() => {
-    // Return sample slice based on playlist
-    if (playlistId === 1) return SAMPLE_SONGS.slice(0, 5);
-    if (playlistId === 2) return [SAMPLE_SONGS[3], SAMPLE_SONGS[4], SAMPLE_SONGS[6], SAMPLE_SONGS[7]];
-    if (playlistId === 3) return [SAMPLE_SONGS[8], SAMPLE_SONGS[13], SAMPLE_SONGS[1]];
-    return SAMPLE_SONGS.slice(0, 4);
-  });
+  const [songs, setSongs] = useState([]);
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editName, setEditName] = useState(playlist.name);
