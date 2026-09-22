@@ -46,15 +46,24 @@ export function AuthProvider({ children }) {
     if (!supabase) return;
 
     // Check current active Supabase session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user && !user) {
         const meta = session.user.user_metadata || {};
+        let role = (meta.role || '').toUpperCase();
+        if (!role || role === 'USER') {
+          try {
+            const { data: dbUser } = await supabase.from('users').select('role').eq('email', session.user.email).maybeSingle();
+            if (dbUser?.role) role = dbUser.role.toUpperCase();
+          } catch {}
+        }
+        if (!role) role = 'USER';
+
         const activeUser = {
           id: session.user.id,
           name: meta.name || session.user.email?.split('@')[0] || 'Musify User',
           email: session.user.email,
-          role: meta.role || 'USER',
-          profileImage: meta.profile_image || meta.profileImage || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'
+          role,
+          profileImage: meta.profile_image || meta.profileImage || (role === 'ARTIST' ? 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=500&auto=format&fit=crop&q=80' : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80')
         };
         setUser(activeUser);
         setToken(session.access_token);
@@ -101,12 +110,21 @@ export function AuthProvider({ children }) {
 
         if (sbData?.user) {
           const meta = sbData.user.user_metadata || {};
+          let role = (meta.role || '').toUpperCase();
+          if (!role || role === 'USER') {
+            try {
+              const { data: dbUser } = await supabase.from('users').select('role').eq('email', sbData.user.email).maybeSingle();
+              if (dbUser?.role) role = dbUser.role.toUpperCase();
+            } catch {}
+          }
+          if (!role) role = 'USER';
+
           authenticatedUser = {
             id: sbData.user.id,
             name: meta.name || email.split('@')[0],
             email: sbData.user.email,
-            role: meta.role || 'USER',
-            profileImage: meta.profile_image || meta.profileImage || 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=500&auto=format&fit=crop&q=80'
+            role,
+            profileImage: meta.profile_image || meta.profileImage || (role === 'ARTIST' ? 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=500&auto=format&fit=crop&q=80' : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80')
           };
           authToken = sbData.session?.access_token || ('sb_token_' + Date.now());
           console.log('Logged in with Supabase Auth:', authenticatedUser);
