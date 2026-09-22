@@ -37,7 +37,7 @@ export default function VolumeControl({ volume, isMuted, onVolumeChange, onToggl
         style={{
           width: '90px',
           height: '4px',
-          backgroundColor: 'rgba(255, 255, 255, 0.18)',
+          backgroundColor: 'rgba(180, 150, 90, 0.22)',
           borderRadius: '2px',
           position: 'relative',
           cursor: 'pointer'
@@ -50,7 +50,7 @@ export default function VolumeControl({ volume, isMuted, onVolumeChange, onToggl
             top: 0,
             height: '100%',
             width: `${displayVolume * 100}%`,
-            backgroundColor: 'var(--text-primary)',
+            backgroundColor: 'var(--accent-primary)',
             borderRadius: '2px'
           }}
         />
