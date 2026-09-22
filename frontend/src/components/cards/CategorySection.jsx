@@ -26,7 +26,7 @@ export default function CategorySection({ title, subtitle = '', songs = [], onAd
           <button 
             onClick={() => scroll('left')} 
             className="btn-icon" 
-            style={{ width: '32px', height: '32px', background: 'rgba(255, 255, 255, 0.06)' }}
+            style={{ width: '32px', height: '32px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-sm)' }}
             aria-label="Scroll left"
           >
             <ChevronLeft size={18} />
@@ -34,7 +34,7 @@ export default function CategorySection({ title, subtitle = '', songs = [], onAd
           <button 
             onClick={() => scroll('right')} 
             className="btn-icon" 
-            style={{ width: '32px', height: '32px', background: 'rgba(255, 255, 255, 0.06)' }}
+            style={{ width: '32px', height: '32px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-sm)' }}
             aria-label="Scroll right"
           >
             <ChevronRight size={18} />

@@ -47,7 +47,7 @@ export default function SongRow({ song, index, playlist = null, onAddToPlaylist 
     }] : []),
     {
       label: liked ? 'Remove from Liked' : 'Save to Liked Songs',
-      icon: <Heart size={15} color={liked ? '#1db954' : 'currentColor'} />,
+      icon: <Heart size={15} color={liked ? 'var(--accent-primary)' : 'currentColor'} />,
       onClick: () => toggleLike(song.id)
     },
     {
@@ -82,7 +82,7 @@ export default function SongRow({ song, index, playlist = null, onAddToPlaylist 
         {isHovered || isCurrentlyPlaying ? (
           <button 
             onClick={(e) => { e.stopPropagation(); handleClick(); }}
-            style={{ color: isCurrent ? 'var(--accent-primary)' : '#fff' }}
+            style={{ color: isCurrent ? 'var(--accent-primary)' : 'var(--text-primary)' }}
             aria-label={isCurrentlyPlaying ? 'Pause' : 'Play'}
           >
             {isCurrentlyPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
