@@ -49,7 +49,7 @@ export default function MusicCard({ song, onAddToPlaylist = null }) {
     }] : []),
     {
       label: liked ? 'Remove from Liked' : 'Save to Liked Songs',
-      icon: <Heart size={15} color={liked ? '#1db954' : 'currentColor'} />,
+      icon: <Heart size={15} color={liked ? 'var(--accent-primary)' : 'currentColor'} />,
       onClick: () => toggleLike(song.id)
     },
     {
