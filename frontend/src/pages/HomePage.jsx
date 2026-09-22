@@ -38,14 +38,14 @@ export default function HomePage() {
             borderRadius: 'var(--radius-xl)',
             overflow: 'hidden',
             marginBottom: '36px',
-            background: 'linear-gradient(135deg, #18281e 0%, #0d1a12 50%, #08080a 100%)',
-            border: '1px solid rgba(29, 185, 84, 0.25)',
+            background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.18) 0%, rgba(212, 175, 55, 0.05) 50%, var(--bg-surface) 100%)',
+            border: '1px solid var(--accent-subtle-border)',
             padding: '36px 40px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: '32px',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)'
+            boxShadow: 'var(--shadow-md)'
           }}
         >
           <div style={{ maxWidth: '580px', zIndex: 2 }}>
@@ -56,8 +56,8 @@ export default function HomePage() {
                 gap: '6px',
                 padding: '4px 12px',
                 borderRadius: 'var(--radius-pill)',
-                backgroundColor: 'rgba(29, 185, 84, 0.2)',
-                color: 'var(--accent-primary)',
+                backgroundColor: 'var(--accent-subtle)',
+                color: 'var(--accent-primary-dark)',
                 fontSize: '12px',
                 fontWeight: 700,
                 marginBottom: '14px'
@@ -79,7 +79,7 @@ export default function HomePage() {
                 className="btn-primary"
                 style={{ padding: '12px 30px', fontSize: '15px' }}
               >
-                <Play size={18} fill="#000" />
+                <Play size={18} fill="#181510" />
                 <span>Play Now</span>
               </button>
               <button
@@ -97,8 +97,8 @@ export default function HomePage() {
               width: '180px',
               height: '180px',
               borderRadius: 'var(--radius-lg)',
-              background: 'rgba(29, 185, 84, 0.1)',
-              border: '1px solid rgba(29, 185, 84, 0.2)',
+              background: 'var(--accent-subtle)',
+              border: '1px solid var(--accent-subtle-border)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -125,8 +125,8 @@ export default function HomePage() {
             borderRadius: 'var(--radius-xl)',
             overflow: 'hidden',
             marginBottom: '36px',
-            background: 'linear-gradient(135deg, #18281e 0%, #0d1a12 50%, #08080a 100%)',
-            border: '1px solid rgba(29, 185, 84, 0.25)',
+            background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.18) 0%, rgba(212, 175, 55, 0.05) 50%, var(--bg-surface) 100%)',
+            border: '1px solid var(--accent-subtle-border)',
             padding: '36px 40px',
             display: 'flex',
             alignItems: 'center',
