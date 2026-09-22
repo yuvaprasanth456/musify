@@ -60,20 +60,20 @@ export default function Sidebar() {
               width: '38px',
               height: '38px',
               borderRadius: '10px',
-              background: 'linear-gradient(135deg, #1db954 0%, #059669 100%)',
+              background: 'var(--accent-gradient)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(29, 185, 84, 0.35)'
+              boxShadow: 'var(--shadow-accent)'
             }}
           >
-            <Music2 size={22} color="#000" strokeWidth={2.5} />
+            <Music2 size={22} color="#181510" strokeWidth={2.5} />
           </div>
           <div>
-            <span style={{ fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#fff' }}>
+            <span style={{ fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
               MUSIFY
             </span>
-            <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--accent-primary)', marginLeft: '4px', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--accent-primary-dark)', marginLeft: '4px', textTransform: 'uppercase' }}>
               PRO
             </span>
           </div>
@@ -105,10 +105,11 @@ export default function Sidebar() {
                 width: '26px', 
                 height: '26px', 
                 borderRadius: '6px', 
-                background: 'linear-gradient(135deg, #450af5 0%, #8e8ee5 100%)',
+                background: 'linear-gradient(135deg, #e5be49 0%, #aa7c11 100%)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                boxShadow: '0 2px 6px rgba(180, 140, 30, 0.25)'
               }}
             >
               <Heart size={14} fill="#fff" color="#fff" />
@@ -122,13 +123,14 @@ export default function Sidebar() {
                 width: '26px', 
                 height: '26px', 
                 borderRadius: '6px', 
-                background: 'rgba(255, 255, 255, 0.1)',
+                background: 'var(--bg-surface-elevated)',
+                border: '1px solid var(--border-subtle)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
             >
-              <Clock size={14} color="#fff" />
+              <Clock size={14} color="var(--text-primary)" />
             </div>
             <span>Recently Played</span>
           </NavLink>
@@ -143,13 +145,14 @@ export default function Sidebar() {
                 width: '26px', 
                 height: '26px', 
                 borderRadius: '6px', 
-                background: 'rgba(255, 255, 255, 0.1)',
+                background: 'var(--bg-surface-elevated)',
+                border: '1px solid var(--border-subtle)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
             >
-              <PlusSquare size={16} color="#fff" />
+              <PlusSquare size={16} color="var(--text-primary)" />
             </div>
             <span>Create Playlist</span>
           </button>
@@ -159,24 +162,24 @@ export default function Sidebar() {
             <NavLink 
               to="/artist/dashboard" 
               className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}
-              style={{ color: 'var(--accent-primary)' }}
+              style={{ color: 'var(--accent-primary-dark)' }}
             >
               <div 
                 style={{ 
                   width: '26px', 
                   height: '26px', 
                   borderRadius: '6px', 
-                  background: 'var(--accent-primary)',
+                  background: 'var(--accent-gradient)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}
               >
-                <Mic2 size={14} color="#000" />
+                <Mic2 size={14} color="#181510" />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span>Artist Studio</span>
-                <Sparkles size={12} color="var(--accent-primary)" />
+                <Sparkles size={12} color="var(--accent-primary-dark)" />
               </div>
             </NavLink>
           )}

@@ -52,7 +52,7 @@ export default function Header() {
           <button 
             onClick={() => navigate(-1)}
             className="btn-icon"
-            style={{ width: '34px', height: '34px', background: 'rgba(0, 0, 0, 0.4)' }}
+            style={{ width: '34px', height: '34px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-sm)' }}
             title="Go back"
           >
             <ChevronLeft size={20} />
@@ -60,7 +60,7 @@ export default function Header() {
           <button 
             onClick={() => navigate(1)}
             className="btn-icon"
-            style={{ width: '34px', height: '34px', background: 'rgba(0, 0, 0, 0.4)' }}
+            style={{ width: '34px', height: '34px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-sm)' }}
             title="Go forward"
           >
             <ChevronRight size={20} />
@@ -68,7 +68,7 @@ export default function Header() {
         </div>
 
         {isHome && (
-          <span style={{ fontSize: '1.25rem', fontWeight: 700, color: '#fff', marginLeft: '8px' }}>
+          <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', marginLeft: '8px' }}>
             {getGreeting()}
           </span>
         )}
@@ -79,7 +79,7 @@ export default function Header() {
         {/* Notification Icon */}
         <button 
           className="btn-icon" 
-          style={{ width: '38px', height: '38px', background: 'rgba(0,0,0,0.3)' }}
+          style={{ width: '38px', height: '38px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
           title="What's New"
         >
           <Bell size={18} />
@@ -96,19 +96,20 @@ export default function Header() {
                 gap: '10px',
                 padding: '4px 12px 4px 6px',
                 borderRadius: 'var(--radius-pill)',
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                border: '1px solid var(--border-subtle)',
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border-medium)',
+                boxShadow: 'var(--shadow-sm)',
                 transition: 'background var(--transition-fast)'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-surface-elevated)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-surface)'}
             >
               <img 
                 src={user.profileImage || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'} 
                 alt={user.name} 
                 style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }}
               />
-              <span style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                 {user.name}
               </span>
               <span 
@@ -117,8 +118,8 @@ export default function Header() {
                   fontWeight: 700, 
                   padding: '2px 6px', 
                   borderRadius: '4px',
-                  backgroundColor: user.role === 'ARTIST' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.15)',
-                  color: user.role === 'ARTIST' ? '#000' : '#fff'
+                  backgroundColor: user.role === 'ARTIST' ? 'var(--accent-primary)' : 'var(--bg-surface-elevated)',
+                  color: user.role === 'ARTIST' ? '#181510' : 'var(--text-secondary)'
                 }}
               >
                 {user.role}
