@@ -106,10 +106,11 @@ export default function SearchPage() {
             width: '100%',
             padding: '14px 46px 14px 48px',
             borderRadius: 'var(--radius-pill)',
-            backgroundColor: 'var(--bg-surface-elevated)',
+            backgroundColor: 'var(--bg-surface)',
             border: '1px solid var(--border-medium)',
             fontSize: '15px',
-            color: '#ffffff'
+            color: 'var(--text-primary)',
+            boxShadow: 'var(--shadow-sm)'
           }}
           autoFocus
         />
@@ -143,8 +144,9 @@ export default function SearchPage() {
                   borderRadius: 'var(--radius-pill)',
                   fontSize: '13px',
                   fontWeight: 600,
-                  backgroundColor: activeCategory === tab ? '#ffffff' : 'rgba(255, 255, 255, 0.08)',
-                  color: activeCategory === tab ? '#000000' : '#ffffff',
+                  backgroundColor: activeCategory === tab ? 'var(--accent-primary)' : 'var(--bg-surface-elevated)',
+                  color: activeCategory === tab ? '#181510' : 'var(--text-secondary)',
+                  border: activeCategory === tab ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
                   transition: 'all var(--transition-fast)'
                 }}
               >
@@ -258,7 +260,7 @@ export default function SearchPage() {
                           alt={artist.name} 
                           style={{ width: '130px', height: '130px', borderRadius: '50%', objectFit: 'cover', marginBottom: '14px' }}
                         />
-                        <div style={{ fontWeight: 700, fontSize: '15px', color: '#fff', marginBottom: '4px' }}>
+                        <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)', marginBottom: '4px' }}>
                           {artist.name}
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
