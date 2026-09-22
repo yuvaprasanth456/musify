@@ -36,23 +36,25 @@ export default function ArtistDetailPage() {
           position: 'relative',
           padding: '40px 32px 32px',
           borderRadius: 'var(--radius-xl)',
-          background: `linear-gradient(180deg, rgba(29, 185, 84, 0.25) 0%, #16161a 100%)`,
+          background: 'linear-gradient(180deg, rgba(212, 175, 55, 0.22) 0%, var(--bg-surface) 100%)',
+          border: '1px solid var(--accent-subtle-border)',
           display: 'flex',
           alignItems: 'flex-end',
           gap: '32px',
-          marginBottom: '28px'
+          marginBottom: '28px',
+          boxShadow: 'var(--shadow-md)'
         }}
       >
         <img 
           src={artist.imageUrl} 
           alt={artist.name} 
-          style={{ width: '180px', height: '180px', borderRadius: '50%', objectFit: 'cover', boxShadow: 'var(--shadow-lg)', flexShrink: 0 }}
+          style={{ width: '180px', height: '180px', borderRadius: '50%', objectFit: 'cover', boxShadow: 'var(--shadow-md)', flexShrink: 0 }}
         />
 
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-            <CheckCircle2 size={18} color="var(--accent-primary)" fill="rgba(29, 185, 84, 0.2)" />
-            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <CheckCircle2 size={18} color="var(--accent-primary-dark)" fill="var(--accent-subtle)" />
+            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent-primary-dark)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Verified Artist
             </span>
           </div>
@@ -75,7 +77,7 @@ export default function ArtistDetailPage() {
           style={{ position: 'static', opacity: 1, transform: 'none', width: '54px', height: '54px' }}
           aria-label="Play artist"
         >
-          <Play size={24} fill="#000" style={{ marginLeft: '3px' }} />
+          <Play size={24} fill="#181510" style={{ marginLeft: '3px' }} />
         </button>
 
         <button 
