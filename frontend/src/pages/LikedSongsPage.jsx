@@ -38,8 +38,9 @@ export default function LikedSongsPage() {
           gap: '28px',
           padding: '28px',
           borderRadius: 'var(--radius-xl)',
-          background: 'linear-gradient(180deg, #450af5 0%, #1e1346 70%, var(--bg-canvas) 100%)',
-          marginBottom: '28px'
+          background: 'linear-gradient(180deg, rgba(212, 175, 55, 0.25) 0%, rgba(212, 175, 55, 0.06) 60%, var(--bg-canvas) 100%)',
+          marginBottom: '28px',
+          border: '1px solid var(--accent-subtle-border)'
         }}
       >
         <div 
@@ -47,11 +48,11 @@ export default function LikedSongsPage() {
             width: '180px',
             height: '180px',
             borderRadius: 'var(--radius-md)',
-            background: 'linear-gradient(135deg, #450af5 0%, #8e8ee5 100%)',
+            background: 'linear-gradient(135deg, #e5be49 0%, #aa7c11 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 16px 36px rgba(0, 0, 0, 0.5)',
+            boxShadow: '0 16px 36px rgba(180, 140, 30, 0.3)',
             flexShrink: 0
           }}
         >
@@ -59,14 +60,14 @@ export default function LikedSongsPage() {
         </div>
 
         <div>
-          <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: '#fff', letterSpacing: '0.08em' }}>
+          <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.08em' }}>
             Playlist
           </span>
-          <h1 className="heading-hero" style={{ fontSize: '3.2rem', margin: '6px 0 12px', color: '#fff' }}>
+          <h1 className="heading-hero" style={{ fontSize: '3.2rem', margin: '6px 0 12px', color: 'var(--text-primary)' }}>
             Liked Songs
           </h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'rgba(255, 255, 255, 0.85)' }}>
-            <span style={{ fontWeight: 700, color: '#fff' }}>{user ? user.name : 'You'}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+            <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{user ? user.name : 'You'}</span>
             <span>•</span>
             <span>{likedSongs.length} songs</span>
           </div>
@@ -82,7 +83,7 @@ export default function LikedSongsPage() {
             style={{ position: 'static', opacity: 1, transform: 'none', width: '54px', height: '54px' }}
             aria-label="Play all liked songs"
           >
-            <Play size={24} fill="#000" style={{ marginLeft: '3px' }} />
+            <Play size={24} fill="#181510" style={{ marginLeft: '3px' }} />
           </button>
 
           <button 
