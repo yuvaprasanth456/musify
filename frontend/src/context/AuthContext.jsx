@@ -95,10 +95,12 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (rawEmail, password) => {
     setLoading(true);
+    const email = (rawEmail || '').trim();
     let authenticatedUser = null;
     let authToken = null;
+    let authErrorMessage = null;
 
     // 1. Try Supabase Auth SignIn first
     if (supabase) {
@@ -130,9 +132,17 @@ export function AuthProvider({ children }) {
           console.log('Logged in with Supabase Auth:', authenticatedUser);
         } else if (sbErr) {
           console.warn('Supabase signIn notice:', sbErr.message);
+          if (sbErr.message?.toLowerCase().includes('email not confirmed')) {
+            authErrorMessage = 'Email not confirmed. Please check your inbox or sign up again.';
+          } else if (sbErr.message?.toLowerCase().includes('invalid login credentials')) {
+            authErrorMessage = 'Invalid email or password. If you registered during the earlier rate-limit error, please create your account again on the Sign Up page.';
+          } else {
+            authErrorMessage = sbErr.message;
+          }
         }
       } catch (err) {
         console.warn('Supabase signIn exception:', err);
+        authErrorMessage = err.message;
       }
     }
 
@@ -154,13 +164,15 @@ export function AuthProvider({ children }) {
       addToast(`Welcome back, ${authenticatedUser.name}! (Authenticated via Supabase)`, 'success');
       return { success: true, user: authenticatedUser };
     } else {
-      addToast('Invalid email or password', 'error');
-      return { success: false, message: 'Invalid email or password' };
+      const finalMsg = authErrorMessage || 'Invalid email or password';
+      addToast(finalMsg, 'error');
+      return { success: false, message: finalMsg };
     }
   };
 
-  const register = async (name, email, password, role = 'USER', profileImage = '') => {
+  const register = async (name, rawEmail, password, role = 'USER', profileImage = '') => {
     setLoading(true);
+    const email = (rawEmail || '').trim();
     const finalProfileImg = (profileImage && profileImage.startsWith('http'))
       ? profileImage 
       : (role === 'ARTIST' 
