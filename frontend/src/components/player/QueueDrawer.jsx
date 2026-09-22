@@ -78,7 +78,7 @@ export default function QueueDrawer() {
                 gap: '12px',
                 marginTop: '10px',
                 padding: '10px',
-                backgroundColor: 'rgba(29, 185, 84, 0.1)',
+                backgroundColor: 'var(--accent-subtle)',
                 borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--accent-subtle-border)'
               }}
