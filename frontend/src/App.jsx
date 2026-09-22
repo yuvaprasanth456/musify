@@ -14,6 +14,7 @@ import PlaylistDetailPage from './pages/PlaylistDetailPage';
 import ArtistDetailPage from './pages/ArtistDetailPage';
 import NowPlayingPage from './pages/NowPlayingPage';
 import ArtistDashboardPage from './pages/ArtistDashboardPage';
+import ArtistRoute from './components/auth/ArtistRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import SettingsPage from './pages/SettingsPage';
@@ -40,7 +41,14 @@ export default function App() {
                 <Route path="playlist/:id" element={<PlaylistDetailPage />} />
                 <Route path="artist/:id" element={<ArtistDetailPage />} />
                 <Route path="now-playing" element={<NowPlayingPage />} />
-                <Route path="artist/dashboard" element={<ArtistDashboardPage />} />
+                <Route 
+                  path="artist/dashboard" 
+                  element={
+                    <ArtistRoute>
+                      <ArtistDashboardPage />
+                    </ArtistRoute>
+                  } 
+                />
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Route>

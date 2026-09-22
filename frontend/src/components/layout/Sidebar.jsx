@@ -154,30 +154,32 @@ export default function Sidebar() {
             <span>Create Playlist</span>
           </button>
 
-          {/* Artist Dashboard Link */}
-          <NavLink 
-            to="/artist/dashboard" 
-            className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}
-            style={isArtist ? { color: 'var(--accent-primary)' } : {}}
-          >
-            <div 
-              style={{ 
-                width: '26px', 
-                height: '26px', 
-                borderRadius: '6px', 
-                background: isArtist ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
+          {/* Artist Dashboard Link - Only visible to Artist accounts */}
+          {isArtist && (
+            <NavLink 
+              to="/artist/dashboard" 
+              className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}
+              style={{ color: 'var(--accent-primary)' }}
             >
-              <Mic2 size={14} color={isArtist ? '#000' : '#fff'} />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span>Artist Studio</span>
-              {isArtist && <Sparkles size={12} color="var(--accent-primary)" />}
-            </div>
-          </NavLink>
+              <div 
+                style={{ 
+                  width: '26px', 
+                  height: '26px', 
+                  borderRadius: '6px', 
+                  background: 'var(--accent-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Mic2 size={14} color="#000" />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>Artist Studio</span>
+                <Sparkles size={12} color="var(--accent-primary)" />
+              </div>
+            </NavLink>
+          )}
         </div>
 
         {/* Separator */}
