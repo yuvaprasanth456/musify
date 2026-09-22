@@ -161,7 +161,7 @@ export default function NowPlayingPage() {
           {/* Title, Artist, Heart */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '380px', marginBottom: '20px' }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <h2 style={{ fontSize: '1.65rem', fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <h2 style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {currentSong.title}
               </h2>
               <p style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>
@@ -192,7 +192,7 @@ export default function NowPlayingPage() {
             <button 
               onClick={toggleShuffle}
               className="btn-icon"
-              style={{ color: isShuffle ? 'var(--accent-primary)' : 'var(--text-secondary)' }}
+              style={{ color: isShuffle ? 'var(--accent-primary-dark)' : 'var(--text-secondary)' }}
             >
               <Shuffle size={20} />
             </button>
@@ -200,7 +200,7 @@ export default function NowPlayingPage() {
             <button 
               onClick={handlePrevTrack}
               className="btn-icon"
-              style={{ color: '#fff' }}
+              style={{ color: 'var(--text-primary)' }}
             >
               <SkipBack size={26} fill="currentColor" />
             </button>
@@ -211,24 +211,30 @@ export default function NowPlayingPage() {
                 width: '60px',
                 height: '60px',
                 borderRadius: '50%',
-                backgroundColor: 'var(--accent-primary)',
-                color: '#000',
+                background: 'var(--accent-gradient)',
+                color: '#181510',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 8px 24px rgba(29, 185, 84, 0.4)',
-                transition: 'transform var(--transition-fast)'
+                boxShadow: 'var(--shadow-accent)',
+                transition: 'transform var(--transition-fast), filter var(--transition-fast)'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.06)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.06)';
+                e.currentTarget.style.filter = 'brightness(1.06)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.filter = 'none';
+              }}
             >
-              {isPlaying ? <Pause size={28} fill="#000" /> : <Play size={28} fill="#000" style={{ marginLeft: '4px' }} />}
+              {isPlaying ? <Pause size={28} fill="#181510" /> : <Play size={28} fill="#181510" style={{ marginLeft: '4px' }} />}
             </button>
 
             <button 
               onClick={handleNextTrack}
               className="btn-icon"
-              style={{ color: '#fff' }}
+              style={{ color: 'var(--text-primary)' }}
             >
               <SkipForward size={26} fill="currentColor" />
             </button>
