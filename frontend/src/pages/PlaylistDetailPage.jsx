@@ -73,28 +73,29 @@ export default function PlaylistDetailPage() {
           gap: '28px',
           padding: '28px',
           borderRadius: 'var(--radius-xl)',
-          background: 'linear-gradient(180deg, #2a2a35 0%, #15151a 70%, var(--bg-canvas) 100%)',
-          marginBottom: '28px'
+          background: 'linear-gradient(180deg, rgba(212, 175, 55, 0.22) 0%, rgba(212, 175, 55, 0.06) 70%, var(--bg-canvas) 100%)',
+          marginBottom: '28px',
+          border: '1px solid var(--accent-subtle-border)'
         }}
       >
         <img 
           src={playlist.coverUrl} 
           alt={playlist.name} 
-          style={{ width: '190px', height: '190px', borderRadius: 'var(--radius-md)', objectFit: 'cover', boxShadow: 'var(--shadow-lg)', flexShrink: 0 }}
+          style={{ width: '190px', height: '190px', borderRadius: 'var(--radius-md)', objectFit: 'cover', boxShadow: 'var(--shadow-md)', flexShrink: 0 }}
         />
 
         <div style={{ flex: 1 }}>
           <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.08em' }}>
             Playlist
           </span>
-          <h1 className="heading-hero" style={{ fontSize: '3rem', margin: '6px 0 10px', color: '#fff' }}>
+          <h1 className="heading-hero" style={{ fontSize: '3rem', margin: '6px 0 10px', color: 'var(--text-primary)' }}>
             {playlist.name}
           </h1>
           <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '14px', maxWidth: '600px' }}>
             {playlist.description}
           </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'rgba(255, 255, 255, 0.85)' }}>
-            <span style={{ fontWeight: 700, color: '#fff' }}>{playlist.createdBy}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+            <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{playlist.createdBy}</span>
             <span>•</span>
             <span>{songs.length} songs</span>
           </div>
@@ -110,7 +111,7 @@ export default function PlaylistDetailPage() {
             style={{ position: 'static', opacity: 1, transform: 'none', width: '54px', height: '54px' }}
             aria-label="Play playlist"
           >
-            <Play size={24} fill="#000" style={{ marginLeft: '3px' }} />
+            <Play size={24} fill="#181510" style={{ marginLeft: '3px' }} />
           </button>
         )}
 
