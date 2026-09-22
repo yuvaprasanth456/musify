@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Sparkles, Radio, Music2, Upload } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
+import { useAuth } from '../context/AuthContext';
 import CategorySection from '../components/cards/CategorySection';
 import AddToPlaylistModal from '../components/playlist/AddToPlaylistModal';
 
 export default function HomePage() {
   const { playSong, recentlyPlayed, songs } = usePlayer();
+  const { isArtist } = useAuth();
   const [selectedSongForPlaylist, setSelectedSongForPlaylist] = useState(null);
 
   // Group songs dynamically from database
@@ -134,19 +136,32 @@ export default function HomePage() {
         >
           <div style={{ maxWidth: '580px', zIndex: 2 }}>
             <h1 className="heading-hero" style={{ marginBottom: '12px' }}>
-              Welcome to MUSIFY
+              {isArtist ? 'Artist Studio' : 'Welcome to MUSIFY'}
             </h1>
             <p style={{ fontSize: '15px', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.6 }}>
-              Upload your original music in the Artist Studio to start streaming worldwide.
+              {isArtist 
+                ? 'Upload your original music in the Artist Studio to start streaming worldwide.'
+                : 'Stream millions of songs, explore curated playlists, and discover new sounds every day.'}
             </p>
-            <Link
-              to="/artist/dashboard"
-              className="btn-primary"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
-            >
-              <Upload size={16} />
-              <span>Upload Your First Song</span>
-            </Link>
+            {isArtist ? (
+              <Link
+                to="/artist/dashboard"
+                className="btn-primary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
+              >
+                <Upload size={16} />
+                <span>Upload Your First Song</span>
+              </Link>
+            ) : (
+              <Link
+                to="/search"
+                className="btn-primary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
+              >
+                <Music2 size={16} />
+                <span>Explore Music</span>
+              </Link>
+            )}
           </div>
         </div>
       )}

@@ -16,7 +16,7 @@ import { getGreeting } from '../../utils/formatters';
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isArtist, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -148,24 +148,27 @@ export default function Header() {
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{user.email}</div>
                 </div>
 
-                <button 
-                  onClick={() => { setDropdownOpen(false); navigate('/artist/dashboard'); }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    width: '100%',
-                    padding: '8px 12px',
-                    fontSize: '13px',
-                    color: 'var(--text-primary)',
-                    borderRadius: 'var(--radius-sm)'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  <Mic2 size={16} color="var(--accent-primary)" />
-                  <span>Artist Studio</span>
-                </button>
+                {isArtist && (
+                  <button 
+                    onClick={() => { setDropdownOpen(false); navigate('/artist/dashboard'); }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      width: '100%',
+                      padding: '8px 12px',
+                      fontSize: '13px',
+                      color: 'var(--accent-primary)',
+                      borderRadius: 'var(--radius-sm)',
+                      fontWeight: 600
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <Mic2 size={16} color="var(--accent-primary)" />
+                    <span>Artist Studio</span>
+                  </button>
+                )}
 
                 <button 
                   onClick={() => { setDropdownOpen(false); navigate('/settings'); }}

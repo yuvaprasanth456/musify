@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Mic2, 
   Upload, 
@@ -26,6 +27,7 @@ import api from '../services/api';
 
 export default function ArtistDashboardPage() {
   const { user, isArtist } = useAuth();
+  const navigate = useNavigate();
   const { addToast } = useToast();
   const { playSong, songs, addUploadedSong, deleteSong } = usePlayer();
 
@@ -241,6 +243,50 @@ export default function ArtistDashboardPage() {
       await deleteSong(trackId);
     }
   };
+
+  if (!isArtist) {
+    return (
+      <div 
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '60vh',
+          textAlign: 'center',
+          padding: '40px 20px'
+        }}
+      >
+        <div 
+          style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            backgroundColor: 'rgba(239, 68, 68, 0.12)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '20px'
+          }}
+        >
+          <AlertCircle size={32} color="#ef4444" />
+        </div>
+        <h2 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '10px' }}>
+          Artist Studio Restricted
+        </h2>
+        <p style={{ color: 'var(--text-secondary)', maxWidth: '440px', marginBottom: '24px', lineHeight: 1.6 }}>
+          This studio is only accessible to verified Artist accounts. You are currently logged in as a Music Listener.
+        </p>
+        <button 
+          onClick={() => navigate('/')} 
+          className="btn-primary"
+          style={{ padding: '10px 24px' }}
+        >
+          Return to Home
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ paddingBottom: '36px' }}>
