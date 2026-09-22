@@ -54,7 +54,7 @@ export function AuthProvider({ children }) {
           try {
             const { data: dbUser } = await supabase.from('users').select('role').eq('email', session.user.email).maybeSingle();
             if (dbUser?.role) role = dbUser.role.toUpperCase();
-          } catch {}
+          } catch { }
         }
         if (!role) role = 'USER';
 
@@ -117,7 +117,7 @@ export function AuthProvider({ children }) {
             try {
               const { data: dbUser } = await supabase.from('users').select('role').eq('email', sbData.user.email).maybeSingle();
               if (dbUser?.role) role = dbUser.role.toUpperCase();
-            } catch {}
+            } catch { }
           }
           if (!role) role = 'USER';
 
@@ -174,10 +174,10 @@ export function AuthProvider({ children }) {
     setLoading(true);
     const email = (rawEmail || '').trim();
     const finalProfileImg = (profileImage && profileImage.startsWith('http'))
-      ? profileImage 
-      : (role === 'ARTIST' 
-          ? 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=500&auto=format&fit=crop&q=80'
-          : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80');
+      ? profileImage
+      : (role === 'ARTIST'
+        ? 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=500&auto=format&fit=crop&q=80'
+        : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80');
 
     let newUser = null;
     let newJwt = null;
@@ -284,7 +284,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     if (supabase) {
-      supabase.auth.signOut().catch(() => {});
+      supabase.auth.signOut().catch(() => { });
     }
     setToken(null);
     setUser(null);
@@ -293,7 +293,7 @@ export function AuthProvider({ children }) {
     addToast('Logged out successfully', 'info');
   };
 
-  const quickLogin = () => {};
+  const quickLogin = () => { };
 
   return (
     <AuthContext.Provider
