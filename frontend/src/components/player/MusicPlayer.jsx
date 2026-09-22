@@ -168,28 +168,28 @@ export default function MusicPlayer() {
               width: '38px',
               height: '38px',
               borderRadius: '50%',
-              backgroundColor: '#ffffff',
-              color: '#000000',
+              background: 'var(--accent-gradient)',
+              color: '#181510',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              transition: 'transform var(--transition-fast), background var(--transition-fast)',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+              transition: 'transform var(--transition-fast), filter var(--transition-fast)',
+              boxShadow: 'var(--shadow-accent)'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'scale(1.08)';
-              e.currentTarget.style.backgroundColor = 'var(--accent-primary-hover)';
+              e.currentTarget.style.filter = 'brightness(1.06)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.backgroundColor = '#ffffff';
+              e.currentTarget.style.filter = 'none';
             }}
             title={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? (
-              <Pause size={20} fill="#000" />
+              <Pause size={20} fill="#181510" />
             ) : (
-              <Play size={20} fill="#000" style={{ marginLeft: '2px' }} />
+              <Play size={20} fill="#181510" style={{ marginLeft: '2px' }} />
             )}
           </button>
 
