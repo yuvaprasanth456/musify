@@ -74,7 +74,7 @@ export default function NowPlayingPage() {
           left: '20%',
           width: '500px',
           height: '500px',
-          background: 'radial-gradient(circle, rgba(29, 185, 84, 0.22) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(212, 175, 55, 0.22) 0%, transparent 70%)',
           filter: 'blur(80px)',
           pointerEvents: 'none',
           zIndex: 0
@@ -86,7 +86,7 @@ export default function NowPlayingPage() {
         <button 
           onClick={() => navigate(-1)}
           className="btn-icon"
-          style={{ width: '40px', height: '40px', background: 'rgba(255, 255, 255, 0.08)' }}
+          style={{ width: '40px', height: '40px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-sm)' }}
           title="Minimize view"
         >
           <ChevronDown size={24} />
