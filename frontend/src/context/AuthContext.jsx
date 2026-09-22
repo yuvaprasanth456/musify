@@ -272,7 +272,7 @@ export function AuthProvider({ children }) {
         token,
         loading,
         isAuthenticated: !!user,
-        isArtist: user?.role === 'ARTIST' || user?.role === 'ADMIN',
+        isArtist: Boolean(user && ((user.role || '').toUpperCase() === 'ARTIST' || (user.role || '').toUpperCase() === 'ADMIN')),
         login,
         register,
         logout,
